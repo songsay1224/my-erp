@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/admin-shell :: layout('인사정보 수정', 'members', ~{::section})}">
+<section>
+    <div th:replace="~{fragments/employee-menu :: menu('list')}"></div>
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div class="text-secondary small">
+            구성원 / <a class="text-decoration-none" th:href="@{|/admin/employees/${employee.empNo}|}"
+                    th:text="${employee.name}">이름</a> / 인사정보 수정
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-outline-dark" th:href="@{|/admin/employees/${employee.empNo}|}">돌아가기</a>
+            <button class="btn btn-sm btn-dark" type="submit" form="hrEditForm">저장</button>
+        </div>
+    </div>
+
+    <div class="alert alert-danger py-2" th:if="${error}" th:text="${error}"></div>
+
+    <div class="alert alert-info d-flex align-items-center justify-content-between gap-3 py-2">
+        <div class="small">
+            회사의 직무, 직위, 조직·직책을 추가하거나 수정하려면 항목 설정을 누르세요.
+        </div>
+        <a class="btn btn-sm btn-outline-secondary" href="/admin/settings">
+            <i class="bi bi-gear"></i> 항목 설정
+        </a>
+    </div>
+
+    <form id="hrEditForm" th:action="@{|/admin/employees/${employee.empNo}/hr|}" method="post" class="row g-3">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+        <div class="col-12 col-xl-8">
+            <div class="app-setting-card">
+                <div class="card-body">
+                    <div class="fw-bold mb-2">인사정보 수정</div>
+
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <label class="form-label">사번</label>
+                            <input class="form-control" th:value="${employee.empNo}" readonly>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">입사일 <span class="text-danger">*</span></label>
+                            <input class="form-control" type="date" name="hireDate" id="hireDate"
+                                   th:value="${employee.hireDate}" required>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">그룹 입사일 <span class="text-danger">*</span></label>
+                            <div class="d-flex gap-2">
+                                <input class="form-control" type="date" name="groupHireDate" id="groupHireDate"
+                                       th:value="${employee.groupHireDate}" required>
+                                <div class="form-check align-self-center" style="white-space: nowrap;">
+                                    <input class="form-check-input" type="checkbox" id="sameHireDate">
+                                    <label class="form-check-label" for="sameHireDate">입사일과 동일</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">
+                                직무
+                                <span class="text-secondary small ms-1">(콤마(,)로 여러 개 입력 가능)</span>
+                            </label>
+                            <input class="form-control" name="jobNames" list="jobOptions"
+                                   placeholder="예) 개발, 기획"
+                                   th:value="${employee.jobNames}">
+                            <datalist id="jobOptions">
+                                <option th:each="j : ${jobOptions}" th:value="${j}"></option>
+                            </datalist>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">직위</label>
+                            <select class="form-select" name="positionName">
+                                <option value="">직위 선택</option>
+                                <option th:if="${employee.positionName != null and !#lists.contains(positionOptions, employee.positionName)}"
+                                        th:value="${employee.positionName}" th:text="${employee.positionName}" selected></option>
+                                <option th:each="p : ${positionOptions}"
+                                        th:value="${p}"
+                                        th:text="${p}"
+                                        th:selected="${employee.positionName == p}"></option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">조직 / 직책</label>
+                            <div id="assignmentsWrap" class="d-grid gap-2">
+                                <div class="app-hr-assign-row" th:each="a,stat : ${assignments}">
+                                    <div class="row g-2 align-items-center">
+                                        <div class="col-12 col-md-6">
+                                            <select class="form-select" name="orgUnitIds">
+                                                <option value="">조직 선택</option>
+                                                <option th:each="o : ${orgRows}"
+                                                        th:value="${o.id}"
+                                                        th:text="${#strings.repeat('— ', o.depth) + o.name}"
+                                                        th:selected="${a.orgUnitId != null and a.orgUnitId == o.id}"></option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12 col-md-4">
+                                            <select class="form-select" name="titleNames">
+                                                <option value="">직책(선택)</option>
+                                                <option th:if="${a.titleName != null and !a.titleName.isBlank() and !#lists.contains(titleOptions, a.titleName)}"
+                                                        th:value="${a.titleName}" th:text="${a.titleName}" selected></option>
+                                                <option th:each="t : ${titleOptions}"
+                                                        th:value="${t}"
+                                                        th:text="${t}"
+                                                        th:selected="${a.titleName == t}"></option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12 col-md-2 d-flex align-items-center justify-content-between">
+                                            <div class="form-check">
+                                                <input type="hidden" name="orgLeaders" value="false">
+                                                <input class="form-check-input orgLeaderCheck" type="checkbox"
+                                                       th:checked="${a.orgLeader == true}">
+                                                <label class="form-check-label">조직장</label>
+                                            </div>
+                                            <button class="btn btn-sm btn-outline-secondary app-icon-btn removeAssignBtn" type="button"
+                                                    th:disabled="${#lists.size(assignments) == 1}" title="삭제">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-outline-success" type="button" id="addAssignBtn">
+                                    <i class="bi bi-plus-lg"></i> 겸직 추가
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">변경 메모</label>
+                            <textarea class="form-control" name="hrMemo" rows="4"
+                                      placeholder="관리자만 확인할 수 있습니다."
+                                      th:text="${employee.hrMemo}"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <div class="app-setting-card">
+                <div class="card-body">
+                    <div class="fw-bold mb-2">현재 요약</div>
+                    <div class="text-secondary small">저장하면 구성원 프로필의 인사 정보/근무정보에 바로 반영됩니다.</div>
+
+                    <div class="mt-3 small">
+                        <div class="d-flex justify-content-between">
+                            <div class="text-secondary">이름</div>
+                            <div class="fw-semibold" th:text="${employee.name}">-</div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <div class="text-secondary">사번</div>
+                            <div class="fw-semibold" th:text="${employee.empNo}">-</div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <div class="text-secondary">고용 형태</div>
+                            <div th:text="${employee.employmentType != null ? employee.employmentType.label : '-'}">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <template id="assignmentTpl">
+        <div class="app-hr-assign-row">
+            <div class="row g-2 align-items-center">
+                <div class="col-12 col-md-6">
+                    <select class="form-select" name="orgUnitIds">
+                        <option value="">조직 선택</option>
+                        <option th:each="o : ${orgRows}"
+                                th:value="${o.id}"
+                                th:text="${#strings.repeat('— ', o.depth) + o.name}"></option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-4">
+                    <select class="form-select" name="titleNames">
+                        <option value="">직책(선택)</option>
+                        <option th:each="t : ${titleOptions}" th:value="${t}" th:text="${t}"></option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-2 d-flex align-items-center justify-content-between">
+                    <div class="form-check">
+                        <input type="hidden" name="orgLeaders" value="false">
+                        <input class="form-check-input orgLeaderCheck" type="checkbox">
+                        <label class="form-check-label">조직장</label>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary app-icon-btn removeAssignBtn" type="button" title="삭제">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        (function () {
+            const hireDate = document.getElementById('hireDate');
+            const groupHireDate = document.getElementById('groupHireDate');
+            const same = document.getElementById('sameHireDate');
+
+            function applySame() {
+                if (!same.checked) return;
+                groupHireDate.value = hireDate.value;
+            }
+
+            same.addEventListener('change', applySame);
+            hireDate.addEventListener('change', applySame);
+
+            const wrap = document.getElementById('assignmentsWrap');
+            const tpl = document.getElementById('assignmentTpl');
+            const addBtn = document.getElementById('addAssignBtn');
+
+            function syncHiddenForRow(row) {
+                const hidden = row.querySelector('input[type="hidden"][name="orgLeaders"]');
+                const check = row.querySelector('input.orgLeaderCheck');
+                if (!hidden || !check) return;
+                hidden.value = check.checked ? 'true' : 'false';
+            }
+
+            function refreshRemoveButtons() {
+                const rows = wrap.querySelectorAll('.app-hr-assign-row');
+                const disable = rows.length <= 1;
+                rows.forEach(r => {
+                    const btn = r.querySelector('.removeAssignBtn');
+                    if (btn) btn.disabled = disable;
+                });
+            }
+
+            wrap.addEventListener('change', (e) => {
+                const target = e.target;
+                if (target && target.classList && target.classList.contains('orgLeaderCheck')) {
+                    const row = target.closest('.app-hr-assign-row');
+                    if (row) syncHiddenForRow(row);
+                }
+            });
+
+            wrap.addEventListener('click', (e) => {
+                const btn = e.target.closest ? e.target.closest('.removeAssignBtn') : null;
+                if (!btn) return;
+                const row = btn.closest('.app-hr-assign-row');
+                if (!row) return;
+                row.remove();
+                refreshRemoveButtons();
+            });
+
+            addBtn.addEventListener('click', () => {
+                const node = tpl.content.cloneNode(true);
+                wrap.appendChild(node);
+                const last = wrap.querySelector('.app-hr-assign-row:last-child');
+                if (last) syncHiddenForRow(last);
+                refreshRemoveButtons();
+            });
+
+            // init
+            wrap.querySelectorAll('.app-hr-assign-row').forEach(syncHiddenForRow);
+            refreshRemoveButtons();
+        })();
+    </script>
+</section>
+</html>
+

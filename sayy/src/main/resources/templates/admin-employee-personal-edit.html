@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/admin-shell :: layout('개인정보 수정', 'members', ~{::section})}">
+<section>
+    <div th:replace="~{fragments/employee-menu :: menu('list')}"></div>
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div class="text-secondary small">
+            구성원 / <a class="text-decoration-none" th:href="@{|/admin/employees/${employee.empNo}/personal|}"
+                    th:text="${employee.name}">이름</a> / 개인정보 수정
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-outline-dark" th:href="@{|/admin/employees/${employee.empNo}/personal|}">돌아가기</a>
+            <button class="btn btn-sm btn-dark" type="submit" form="personalEditForm">저장</button>
+        </div>
+    </div>
+
+    <div class="alert alert-danger py-2" th:if="${error}" th:text="${error}"></div>
+
+    <form id="personalEditForm" th:action="@{|/admin/employees/${employee.empNo}/personal|}" method="post" class="row g-3">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+        <div class="col-12 col-xl-8">
+            <div class="app-setting-card">
+                <div class="card-body">
+                    <div class="fw-bold mb-3">기본 정보</div>
+                    <div class="row g-2">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">이름</label>
+                            <input class="form-control" th:value="${employee.name}" readonly>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">영문 이름</label>
+                            <input class="form-control" type="text" name="nameEn"
+                                   placeholder="예) Hong Gildong"
+                                   th:value="${employee.nameEn}">
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">생년월일</label>
+                            <input class="form-control" th:value="${employee.birthDate}" readonly>
+                            <div class="form-text">주민등록번호 등록 시 자동 반영됩니다.</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">성별</label>
+                            <select class="form-select" name="gender">
+                                <option value="">선택 안함</option>
+                                <option value="남성" th:selected="${employee.gender == '남성'}">남성</option>
+                                <option value="여성" th:selected="${employee.gender == '여성'}">여성</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">주민등록번호</label>
+                            <input class="form-control" th:value="${employee.identificationNumberFormatted}" readonly>
+                            <div class="form-text">엑셀 업로드를 통해 등록할 수 있습니다.</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">국적</label>
+                            <input class="form-control" type="text" name="nationality"
+                                   placeholder="예) 대한민국"
+                                   th:value="${employee.nationality}">
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">휴대전화</label>
+                            <input class="form-control" type="text" name="phone"
+                                   placeholder="예) 010-1234-5678"
+                                   th:value="${employee.phone}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="app-setting-card mt-3">
+                <div class="card-body">
+                    <div class="fw-bold mb-3">급여 계좌 정보</div>
+                    <div class="row g-2">
+                        <div class="col-12 col-md-4">
+                            <label class="form-label">은행</label>
+                            <input class="form-control" type="text" name="bankName"
+                                   list="bankOptions"
+                                   placeholder="예) 국민은행"
+                                   th:value="${employee.bankName}">
+                            <datalist id="bankOptions">
+                                <option value="국민은행"></option>
+                                <option value="신한은행"></option>
+                                <option value="우리은행"></option>
+                                <option value="하나은행"></option>
+                                <option value="기업은행"></option>
+                                <option value="농협은행"></option>
+                                <option value="카카오뱅크"></option>
+                                <option value="토스뱅크"></option>
+                                <option value="케이뱅크"></option>
+                                <option value="부산은행"></option>
+                                <option value="대구은행"></option>
+                            </datalist>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label">계좌번호</label>
+                            <input class="form-control" type="text" name="bankAccount"
+                                   placeholder="예) 123-456-789012"
+                                   th:value="${employee.bankAccount}">
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label">예금주</label>
+                            <input class="form-control" type="text" name="bankHolder"
+                                   placeholder="예금주명"
+                                   th:value="${employee.bankHolder}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <div class="app-setting-card">
+                <div class="card-body">
+                    <div class="fw-bold mb-2">현재 요약</div>
+                    <div class="text-secondary small">저장하면 개인정보에 바로 반영됩니다.</div>
+                    <div class="mt-3 small">
+                        <div class="d-flex justify-content-between">
+                            <div class="text-secondary">이름</div>
+                            <div class="fw-semibold" th:text="${employee.name}">-</div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <div class="text-secondary">사번</div>
+                            <div class="fw-semibold" th:text="${employee.empNo}">-</div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <div class="text-secondary">고용 형태</div>
+                            <div th:text="${employee.employmentType != null ? employee.employmentType.label : '-'}">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</section>
+</html>

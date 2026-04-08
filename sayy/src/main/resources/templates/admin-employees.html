@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/admin-shell :: layout('구성원', 'members', ~{::section})}">
+<section>
+    <div th:replace="~{fragments/employee-menu :: menu('list')}"></div>
+    <div class="app-setting-card mb-3">
+        <div class="card-body py-3">
+            <div class="app-filter-header">
+                <div>
+                    <div class="fw-bold">구성원 필터</div>
+                    <div class="text-secondary small">상태, 고용형태, 검색, 정렬을 조합해서 목록을 볼 수 있습니다.</div>
+                </div>
+                <div class="text-secondary small" th:text="'표시 ' + ${#lists.size(employees)} + '명'">표시 0명</div>
+            </div>
+
+            <div class="app-filter-grid mt-3">
+                <div class="app-filter-group">
+                    <div class="app-filter-label">상태</div>
+                    <ul class="nav nav-pills app-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               th:classappend="${selectedStatus}=='ALL' ? ' active' : ''"
+                               th:href="@{/admin/employees(type=${selectedType}, status='ALL', q=${keyword}, sort=${selectedSort})}">
+                                전체 <span class="badge text-bg-light ms-1" th:text="${totalCount}">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               th:classappend="${selectedStatus}=='ACTIVE' ? ' active' : ''"
+                               th:href="@{/admin/employees(type=${selectedType}, status='ACTIVE', q=${keyword}, sort=${selectedSort})}">
+                                재직자 <span class="badge text-bg-light ms-1" th:text="${activeCount}">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               th:classappend="${selectedStatus}=='LEAVE' ? ' active' : ''"
+                               th:href="@{/admin/employees(type=${selectedType}, status='LEAVE', q=${keyword}, sort=${selectedSort})}">
+                                휴직자 <span class="badge text-bg-light ms-1" th:text="${leaveCount}">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               th:classappend="${selectedStatus}=='TERMINATED' ? ' active' : ''"
+                               th:href="@{/admin/employees(type=${selectedType}, status='TERMINATED', q=${keyword}, sort=${selectedSort})}">
+                                퇴직자 <span class="badge text-bg-light ms-1" th:text="${terminatedCount}">0</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+             <!--   <div class="app-filter-group">
+                    <div class="app-filter-label">고용형태</div>
+                    <ul class="nav nav-pills app-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               th:classappend="${selectedType}=='ALL' ? ' active' : ''"
+                               th:href="@{/admin/employees(type='ALL', status=${selectedStatus}, q=${keyword}, sort=${selectedSort})}">
+                                전체 <span class="badge text-bg-light ms-1" th:text="${totalCount}">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               th:classappend="${selectedType}=='REGULAR' ? ' active' : ''"
+                               th:href="@{/admin/employees(type='REGULAR', status=${selectedStatus}, q=${keyword}, sort=${selectedSort})}">
+                                정규직 <span class="badge text-bg-light ms-1" th:text="${regularCount}">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               th:classappend="${selectedType}=='CONTRACT' ? ' active' : ''"
+                               th:href="@{/admin/employees(type='CONTRACT', status=${selectedStatus}, q=${keyword}, sort=${selectedSort})}">
+                                계약직 <span class="badge text-bg-light ms-1" th:text="${contractCount}">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               th:classappend="${selectedType}=='FREELANCER' ? ' active' : ''"
+                               th:href="@{/admin/employees(type='FREELANCER', status=${selectedStatus}, q=${keyword}, sort=${selectedSort})}">
+                                프리랜서 <span class="badge text-bg-light ms-1" th:text="${freelancerCount}">0</span>
+                             </a>
+                        </li>
+                    </ul>
+                </div>-->
+            </div>
+
+            <form method="get" action="/admin/employees" class="row g-2 align-items-center mt-3">
+                <input type="hidden" name="type" th:value="${selectedType}">
+                <input type="hidden" name="status" th:value="${selectedStatus}">
+                <div class="col-12 col-lg-5">
+                    <input class="form-control" type="search" name="q" th:value="${keyword}"
+                           placeholder="사번 또는 이름으로 검색">
+                </div>
+                <div class="col-12 col-md-4 col-lg-3">
+                    <select class="form-select" name="sort">
+                        <option value="createdAtDesc" th:selected="${selectedSort == 'createdAtDesc'}">최근 등록순</option>
+                        <option value="hireDateDesc" th:selected="${selectedSort == 'hireDateDesc'}">입사일 최신순</option>
+                        <option value="hireDateAsc" th:selected="${selectedSort == 'hireDateAsc'}">입사일 오래된순</option>
+                        <option value="nameAsc" th:selected="${selectedSort == 'nameAsc'}">이름순</option>
+                        <option value="empNoAsc" th:selected="${selectedSort == 'empNoAsc'}">사번순</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-2 col-lg-1 d-grid">
+                    <button class="btn btn-dark" type="submit">적용</button>
+                </div>
+                <div class="col-6 col-md-2 col-lg-1 d-grid">
+                    <a class="btn btn-outline-secondary"
+                       th:href="@{/admin/employees(type=${selectedType}, status=${selectedStatus})}">초기화</a>
+                </div>
+                <div class="col-12 col-lg text-secondary small text-lg-end"
+                     th:if="${keyword != null and !keyword.isBlank()}"
+                     th:text="${'검색어: ' + keyword}">
+                    검색어
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="alert alert-success py-2" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-danger py-2" th:if="${error}" th:text="${error}"></div>
+
+    <div class="alert alert-warning py-2" th:if="${issuedUsername}">
+        <div class="fw-semibold">계정 발급 완료</div>
+        <div class="small">아이디: <span class="fw-semibold" th:text="${issuedUsername}"></span></div>
+        <div class="small">초기 비밀번호: <span class="fw-semibold" th:text="${issuedPassword}"></span></div>
+        <div class="small text-secondary">초기 비밀번호는 이 화면에서만 확인하세요.</div>
+    </div>
+
+    <div class="app-setting-card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="fw-bold">인사정보 목록</div>
+                <div class="text-secondary small" th:text="'정렬 ' + ${selectedSort}">정렬</div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0 app-table">
+                    <thead>
+                    <tr class="text-secondary">
+                        <th style="width: 140px;">사번</th>
+                        <th style="width: 160px;">이름</th>
+                        <th style="width: 90px;">상태</th>
+                        <th style="width: 110px;">고용형태</th>
+                        <th style="width: 110px;">직위</th>
+                        <th style="width: 140px;">부서</th>
+                        <th style="width: 130px;">입사일</th>
+                        <th style="width: 130px;">퇴사일</th>
+                        <th style="width: 130px;">계약 종료일</th>
+                        <th style="width: 1%; white-space: nowrap;"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(employees)}">
+                        <td colspan="10" class="text-center text-secondary py-4">등록된 인사정보가 없습니다.</td>
+                    </tr>
+                    <tr th:each="e : ${employees}">
+                        <td class="fw-semibold">
+                            <a class="text-decoration-none" th:href="@{|/admin/employees/${e.empNo}|}" th:text="${e.empNo}">-</a>
+                        </td>
+                        <td>
+                            <a class="text-decoration-none" th:href="@{|/admin/employees/${e.empNo}|}" th:text="${e.name}">-</a>
+                        </td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${
+                                      e.employmentStatus == T(com.example.sayy.Entity.EmploymentStatus).ACTIVE ? ' app-badge-active' :
+                                      (e.employmentStatus == T(com.example.sayy.Entity.EmploymentStatus).LEAVE ? ' app-badge-leave' : ' app-badge-terminated')
+                                  }"
+                                  th:text="${e.employmentStatus != null ? e.employmentStatus.label : '-'}">-</span>
+                        </td>
+                        <td>
+                            <span class="badge text-bg-secondary"
+                                  th:text="${e.employmentType != null ? e.employmentType.label : '-'}">-</span>
+                        </td>
+                        <td class="text-secondary small" th:text="${e.positionName != null ? e.positionName : '-'}">-</td>
+                        <td class="text-secondary small" th:text="${e.departmentName != null ? e.departmentName : '-'}">-</td>
+                        <td class="text-secondary small" th:text="${e.hireDate != null ? e.hireDate : '-'}">-</td>
+                        <td class="text-secondary small" th:text="${e.terminationDate != null ? e.terminationDate : '-'}">-</td>
+                        <td class="text-secondary small"
+                            th:text="${e.employmentType == T(com.example.sayy.Entity.EmploymentType).CONTRACT or e.employmentType == T(com.example.sayy.Entity.EmploymentType).FREELANCER ? (e.contractEndDate != null ? e.contractEndDate : '-') : ''}">-</td>
+                        <td class="text-end app-actions-cell">
+                            <div class="app-row-actions">
+                                <form th:if="${(e.user == null or e.user.username == null) and e.employmentType == T(com.example.sayy.Entity.EmploymentType).REGULAR}"
+                                      th:action="@{|/admin/employees/${e.empNo}/issue-account|}" method="post">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <button class="btn btn-sm btn-outline-dark" type="submit">계정/초기비번 발급</button>
+                                </form>
+
+                                <form th:if="${e.user == null or e.user.username == null}" th:action="@{|/admin/employees/${e.empNo}/delete|}" method="post"
+                                      onsubmit="return confirm('정말 삭제할까요?');">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">삭제</button>
+                                </form>
+
+                                <form th:if="${e.user != null and e.user.username != null and e.employmentType == T(com.example.sayy.Entity.EmploymentType).REGULAR}"
+                                      th:action="@{|/admin/employees/${e.empNo}/delete-with-account|}" method="post"
+                                      onsubmit="return confirm('계정까지 함께 삭제합니다. 정말 진행할까요?');">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <button class="btn btn-sm btn-danger" type="submit">계정+인사정보 삭제</button>
+                                </form>
+
+                                <span class="text-secondary small"
+                                      th:if="${e.employmentType != null and e.employmentType != T(com.example.sayy.Entity.EmploymentType).REGULAR}">
+                                    계정 발급은 정규직만 해당
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+</html>
+

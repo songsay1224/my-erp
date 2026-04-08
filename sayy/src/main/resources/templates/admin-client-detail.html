@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/admin-shell :: layout('거래처 상세', 'clients', ~{::section})}">
+<section>
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div class="text-secondary small">
+            거래처 관리 / <span class="fw-semibold" th:text="${client.name}">-</span>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-outline-secondary" href="/admin/clients">목록</a>
+            <a class="btn btn-sm btn-outline-dark" th:href="@{|/admin/clients/${client.id}/edit|}">
+                <i class="bi bi-pencil"></i> 수정
+            </a>
+            <form th:action="@{|/admin/clients/${client.id}/delete|}" method="post"
+                  onsubmit="return confirm('거래처를 삭제하시겠습니까? 관련 프로젝트 연결이 해제됩니다.')">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn btn-sm btn-outline-danger">삭제</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="alert alert-success py-2" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-danger py-2" th:if="${error}" th:text="${error}"></div>
+
+    <div class="row g-3">
+        <!-- 기본 정보 -->
+        <div class="col-12 col-lg-7">
+            <div class="app-setting-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="fw-bold">기본 정보</div>
+                        <span class="badge"
+                              th:classappend="${client.status == 'ACTIVE' ? ' text-bg-success' : (client.status == 'DORMANT' ? ' text-bg-warning' : ' text-bg-secondary')}"
+                              th:text="${client.statusLabel}">-</span>
+                    </div>
+                    <div class="row g-0 app-kv">
+                        <div class="col-12 col-md-6">
+                            <div class="app-kv-row">
+                                <div class="app-kv-key">거래처명</div>
+                                <div class="app-kv-val fw-semibold" th:text="${client.name}">-</div>
+                            </div>
+                            <div class="app-kv-row">
+                                <div class="app-kv-key">사업자등록번호</div>
+                                <div class="app-kv-val" th:text="${client.businessRegNoFormatted != null ? client.businessRegNoFormatted : '-'}">-</div>
+                            </div>
+                            <div class="app-kv-row">
+                                <div class="app-kv-key">법인등록번호</div>
+                                <div class="app-kv-val" th:text="${client.corporateRegNoFormatted != null ? client.corporateRegNoFormatted : '-'}">-</div>
+                            </div>
+                            <div class="app-kv-row">
+                                <div class="app-kv-key">대표자</div>
+                                <div class="app-kv-val" th:text="${client.ceoName != null ? client.ceoName : '-'}">-</div>
+                            </div>
+                            <div class="app-kv-row">
+                                <div class="app-kv-key">업종</div>
+                                <div class="app-kv-val" th:text="${client.industry != null ? client.industry : '-'}">-</div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="app-kv-row">
+                                <div class="app-kv-key">대표 전화</div>
+                                <div class="app-kv-val" th:text="${client.phone != null ? client.phone : '-'}">-</div>
+                            </div>
+                            <div class="app-kv-row">
+                                <div class="app-kv-key">이메일</div>
+                                <div class="app-kv-val" th:text="${client.email != null ? client.email : '-'}">-</div>
+                            </div>
+                            <div class="app-kv-row">
+                                <div class="app-kv-key">주소</div>
+                                <div class="app-kv-val">
+                                    <span th:if="${client.address != null}"
+                                          th:text="${(client.zipCode != null ? '[' + client.zipCode + '] ' : '') + client.address + (client.addressDetail != null ? ' ' + client.addressDetail : '')}">-</span>
+                                    <span th:if="${client.address == null}" class="text-secondary">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-secondary small" th:if="${client.memo != null and !client.memo.isBlank()}">
+                        메모: <span th:text="${client.memo}">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 담당자 -->
+        <div class="col-12 col-lg-5">
+            <div class="app-setting-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="fw-bold">담당자</div>
+                        <button class="btn btn-sm btn-outline-dark" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#contactAddForm">
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
+                    </div>
+
+                    <div class="collapse mb-3" id="contactAddForm">
+                        <form th:action="@{|/admin/clients/${client.id}/contacts|}" method="post"
+                              class="border rounded p-3 bg-light">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <div class="row g-2">
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label form-label-sm">이름 *</label>
+                                    <input class="form-control form-control-sm" name="name" required>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label form-label-sm">직위</label>
+                                    <input class="form-control form-control-sm" name="position">
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label form-label-sm">부서</label>
+                                    <input class="form-control form-control-sm" name="department">
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label form-label-sm">연락처</label>
+                                    <input class="form-control form-control-sm" name="phone">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label form-label-sm">이메일</label>
+                                    <input class="form-control form-control-sm" type="email" name="email">
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="isPrimary" value="true" id="isPrimary">
+                                        <label class="form-check-label small" for="isPrimary">주 담당자</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2 mt-2">
+                                <button type="submit" class="btn btn-sm btn-dark">추가</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        data-bs-toggle="collapse" data-bs-target="#contactAddForm">취소</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(client.contacts)}" class="text-secondary small">
+                        등록된 담당자가 없습니다.
+                    </div>
+                    <div th:each="contact : ${client.contacts}"
+                         class="d-flex justify-content-between align-items-start border-bottom pb-2 mb-2">
+                        <div>
+                            <div class="fw-semibold">
+                                <span th:text="${contact.name}">-</span>
+                                <span th:if="${contact.isPrimary}" class="badge text-bg-primary ms-1 small">주담당</span>
+                            </div>
+                            <div class="text-secondary small">
+                                <span th:if="${contact.position != null}" th:text="${contact.position}"></span>
+                                <span th:if="${contact.department != null}" th:text="${' / ' + contact.department}"></span>
+                            </div>
+                            <div class="small">
+                                <span th:if="${contact.phone != null}" th:text="${contact.phone}">-</span>
+                                <span th:if="${contact.email != null}" class="text-secondary ms-2" th:text="${contact.email}">-</span>
+                            </div>
+                        </div>
+                        <form th:action="@{|/admin/clients/${client.id}/contacts/${contact.id}/delete|}"
+                              method="post" onsubmit="return confirm('담당자를 삭제하시겠습니까?')">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/admin-shell :: layout('구성원 등록', 'members', ~{::section})}">
+<section>
+    <div th:replace="~{fragments/employee-menu :: menu('new')}"></div>
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div class="text-secondary small">
+            인사정보 등록 후 필요 시 계정/초기 비밀번호를 발급하세요.
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-outline-dark" href="/admin/employees">목록으로</a>
+            <button class="btn btn-sm btn-dark" type="submit" form="employeeCreateForm">저장</button>
+        </div>
+    </div>
+
+    <div class="alert alert-success py-2" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-danger py-2" th:if="${error}" th:text="${error}"></div>
+
+    <form id="employeeCreateForm" th:action="@{/admin/employees}" method="post" class="row g-3">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <input type="hidden" name="taxScheme" id="taxScheme" value="SALARY_WITHHOLDING"/>
+
+        <div class="col-12 col-xl-7">
+            <div class="app-setting-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="fw-bold">기본 정보</div>
+                        <div class="text-secondary small">필수</div>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-12 col-md-4">
+                            <label class="form-label">사번</label>
+                            <input class="form-control" name="empNo" placeholder="예) 20260001"
+                                   inputmode="numeric" pattern="[0-9]+" required>
+                        </div>
+                        <div class="col-12 col-md-8">
+                            <label class="form-label">이름</label>
+                            <input class="form-control" name="name" placeholder="예) 홍길동" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="app-setting-card mt-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="fw-bold">고용 정보</div>
+                        <div class="text-secondary small">유형별 입력</div>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-12 col-md-5">
+                            <label class="form-label">고용 형태</label>
+                            <select class="form-select" name="employmentType" id="employmentType" required>
+                                <option value="REGULAR">정규직</option>
+                                <option value="CONTRACT">계약직</option>
+                                <option value="FREELANCER">프리랜서</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-7">
+                            <label class="form-label">정책 요약</label>
+                            <div class="form-control bg-light" id="employmentHelp"
+                                 style="height: 38px; display:flex; align-items:center;">
+                                정규직: 4대 보험/근로소득(원천징수), 계약 종료일은 보통 없음
+                            </div>
+                        </div>
+
+                        <div class="col-12" id="sectionEmployee">
+                            <div class="row g-2 mt-1">
+                                <div class="col-12 col-md-5">
+                                    <label class="form-label">4대 보험</label>
+                                    <select class="form-select" name="fourInsured" id="fourInsured">
+                                        <option value="true">가입</option>
+                                        <option value="false">미가입</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-7">
+                                    <label class="form-label">세금 계산 방식</label>
+                                    <div class="form-control bg-light" id="taxSchemeLabel"
+                                         style="height: 38px; display:flex; align-items:center;">
+                                        근로소득(원천징수)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 d-none" id="sectionFreelancer">
+                            <div class="row g-2 mt-1">
+                                <div class="col-12">
+                                    <label class="form-label">세금 계산 방식</label>
+                                    <div class="form-control bg-light"
+                                         style="height: 38px; display:flex; align-items:center;">
+                                        사업소득(3.3%)
+                                    </div>
+                                    <div class="text-secondary small mt-1">
+                                        프리랜서는 현재 MVP에서 사업소득(3.3%) 기준으로 고정합니다.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-5">
+            <div class="app-setting-card" id="sectionContractEnd">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="fw-bold">계약 정보</div>
+                        <div class="text-secondary small" id="contractRequiredBadge">선택</div>
+                    </div>
+
+                    <label class="form-label">계약 종료일</label>
+                    <input class="form-control" type="date" name="contractEndDate" id="contractEndDate">
+                    <div class="text-secondary small mt-2">
+                        계약직/프리랜서는 종료일 관리가 필요합니다. 정규직은 보통 비워둡니다.
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-secondary small mt-3">
+                저장 후에도 이 페이지에 머뭅니다(연속 등록에 최적화).
+            </div>
+        </div>
+    </form>
+
+    <script>
+        (function () {
+            const employmentType = document.getElementById('employmentType');
+            const help = document.getElementById('employmentHelp');
+            const sectionEmployee = document.getElementById('sectionEmployee');
+            const sectionFreelancer = document.getElementById('sectionFreelancer');
+            const sectionContractEnd = document.getElementById('sectionContractEnd');
+            const contractEndDate = document.getElementById('contractEndDate');
+            const fourInsured = document.getElementById('fourInsured');
+            const taxScheme = document.getElementById('taxScheme');
+            const taxSchemeLabel = document.getElementById('taxSchemeLabel');
+            const contractRequiredBadge = document.getElementById('contractRequiredBadge');
+
+            function apply(type) {
+                // defaults
+                sectionEmployee.classList.remove('d-none');
+                sectionFreelancer.classList.add('d-none');
+                contractEndDate.required = false;
+                contractRequiredBadge.textContent = '선택';
+
+                if (type === 'REGULAR') {
+                    help.textContent = '정규직: 4대 보험/근로소득(원천징수), 계약 종료일은 보통 없음';
+                    fourInsured.disabled = false;
+                    taxScheme.value = 'SALARY_WITHHOLDING';
+                    taxSchemeLabel.textContent = '근로소득(원천징수)';
+                    contractEndDate.value = '';
+                } else if (type === 'CONTRACT') {
+                    help.textContent = '계약직: 계약 종료일 관리 필수, 4대 보험/세금 방식은 회사 정책에 따라';
+                    contractEndDate.required = true;
+                    contractRequiredBadge.textContent = '필수';
+                    fourInsured.disabled = false;
+                    taxScheme.value = 'SALARY_WITHHOLDING';
+                    taxSchemeLabel.textContent = '근로소득(원천징수)';
+                } else if (type === 'FREELANCER') {
+                    help.textContent = '프리랜서: 계약 종료일 관리 필수, 세금은 보통 사업소득(3.3%), 4대 보험은 일반적으로 미가입';
+                    sectionEmployee.classList.add('d-none');
+                    sectionFreelancer.classList.remove('d-none');
+                    contractEndDate.required = true;
+                    contractRequiredBadge.textContent = '필수';
+                    fourInsured.disabled = true;
+                    taxScheme.value = 'BUSINESS_INCOME_3_3';
+                }
+            }
+
+            employmentType.addEventListener('change', () => apply(employmentType.value));
+            apply(employmentType.value);
+        })();
+    </script>
+</section>
+</html>
+

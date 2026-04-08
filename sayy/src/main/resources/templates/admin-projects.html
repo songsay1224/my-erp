@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/admin-shell :: layout('프로젝트 관리', 'projects', ~{::section})}">
+<section>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <form class="d-flex gap-2 flex-wrap align-items-center" method="get" action="/admin/projects">
+            <select class="form-select form-select-sm" name="status" style="width:130px"
+                    onchange="this.form.submit()">
+                <option value="" th:selected="${selectedStatus == null or selectedStatus == ''}">전체</option>
+                <option value="ESTIMATE"    th:selected="${selectedStatus == 'ESTIMATE'}">견적</option>
+                <option value="CONTRACT"    th:selected="${selectedStatus == 'CONTRACT'}">계약</option>
+                <option value="IN_PROGRESS" th:selected="${selectedStatus == 'IN_PROGRESS'}">진행중</option>
+                <option value="DONE"        th:selected="${selectedStatus == 'DONE'}">완료</option>
+                <option value="CANCELLED"   th:selected="${selectedStatus == 'CANCELLED'}">취소</option>
+            </select>
+            <div class="input-group input-group-sm" style="width:240px">
+                <input class="form-control" type="search" name="keyword"
+                       th:value="${keyword}" placeholder="프로젝트명, 거래처명 검색">
+                <button class="btn btn-outline-secondary" type="submit">검색</button>
+            </div>
+        </form>
+        <a class="btn btn-sm btn-dark" href="/admin/projects/new">
+            <i class="bi bi-plus-lg"></i> 프로젝트 추가
+        </a>
+    </div>
+
+    <div class="alert alert-success py-2" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-danger py-2" th:if="${error}" th:text="${error}"></div>
+
+    <div class="app-setting-card p-0">
+        <div th:if="${#lists.isEmpty(projects)}" class="text-secondary small p-4 text-center">
+            등록된 프로젝트가 없습니다.
+        </div>
+        <table class="table table-hover mb-0" th:if="${!#lists.isEmpty(projects)}">
+            <thead class="table-light">
+                <tr>
+                    <th>프로젝트명</th>
+                    <th class="d-none d-md-table-cell">거래처</th>
+                    <th>상태</th>
+                    <th class="d-none d-md-table-cell">기간</th>
+                    <th class="d-none d-md-table-cell">계약금액</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="p : ${projects}" style="cursor:pointer"
+                    th:onclick="|location.href='/admin/projects/${p.id}'|">
+                    <td class="fw-semibold align-middle" th:text="${p.name}">-</td>
+                    <td class="d-none d-md-table-cell align-middle text-secondary"
+                        th:text="${p.clientName != null ? p.clientName : '-'}">-</td>
+                    <td class="align-middle">
+                        <span class="badge" th:classappend="${p.statusBadgeClass}"
+                              th:text="${p.statusLabel}">-</span>
+                    </td>
+                    <td class="d-none d-md-table-cell align-middle text-secondary small">
+                        <span th:if="${p.startDate != null}" th:text="${p.startDate}">-</span>
+                        <span th:if="${p.startDate != null}"> ~ </span>
+                        <span th:text="${p.endDate != null ? p.endDate : ''}">-</span>
+                        <span th:if="${p.startDate == null}">-</span>
+                    </td>
+                    <td class="d-none d-md-table-cell align-middle">
+                        <span th:if="${p.contractAmount != null}"
+                              th:text="${#numbers.formatInteger(p.contractAmount, 0, 'COMMA') + ' 원'}">-</span>
+                        <span th:if="${p.contractAmount == null}" class="text-secondary">-</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+</html>

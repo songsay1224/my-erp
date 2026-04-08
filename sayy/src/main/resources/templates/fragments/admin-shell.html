@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:fragment="layout(pageTitle, activeMenu, content)">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${pageTitle}">Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+    <link th:href="@{/css/app.css}" rel="stylesheet">
+</head>
+<body>
+
+<div class="app-shell">
+    <aside class="app-sidebar">
+        <div class="app-brand">
+            <div class="app-brand-badge">S</div>
+            <div class="app-brand-text">
+                <div class="app-brand-name">그룹웨어</div>
+                <div class="app-brand-sub">Groupware Admin</div>
+            </div>
+        </div>
+
+        <nav class="app-nav">
+            <a class="app-nav-item"
+               th:classappend="${activeMenu}=='home' ? ' active' : ''"
+               href="/admin/home">
+                <span class="app-nav-dot"></span>
+                홈
+            </a>
+            <a class="app-nav-item"
+               th:classappend="${activeMenu}=='calendar' ? ' active' : ''"
+               href="/admin/calendar">
+                <span class="app-nav-dot"></span>
+                캘린더
+            </a>
+            <a class="app-nav-item"
+               th:classappend="${activeMenu}=='members' ? ' active' : ''"
+               href="/admin/employees">
+                <span class="app-nav-dot"></span>
+                인사 관리
+            </a>
+            <a class="app-nav-item"
+               th:classappend="${activeMenu}=='clients' ? ' active' : ''"
+               href="/admin/clients">
+                <span class="app-nav-dot"></span>
+                거래처 관리
+            </a>
+            <a class="app-nav-item"
+               th:classappend="${activeMenu}=='projects' ? ' active' : ''"
+               href="/admin/projects">
+                <span class="app-nav-dot"></span>
+                프로젝트 관리
+            </a>
+            <a class="app-nav-item"
+               th:classappend="${activeMenu}=='company' ? ' active' : ''"
+               href="/admin/company">
+                <span class="app-nav-dot"></span>
+                회사 정보
+            </a>
+           <!-- <a class="app-nav-item disabled" href="#" onclick="return false;">
+                <span class="app-nav-dot"></span>
+                자동 발송
+            </a>-->
+            <a class="app-nav-item disabled" href="#" onclick="return false;">
+                <span class="app-nav-dot"></span>
+                근무
+            </a>
+            <a class="app-nav-item disabled" href="#" onclick="return false;">
+                <span class="app-nav-dot"></span>
+                휴가
+            </a>
+           <!-- <a class="app-nav-item disabled" href="#" onclick="return false;">
+                <span class="app-nav-dot"></span>
+                워크플로우
+            </a>-->
+            <a class="app-nav-item disabled" href="#" onclick="return false;">
+                <span class="app-nav-dot"></span>
+                전자계약
+            </a>
+            <a class="app-nav-item disabled" href="#" onclick="return false;">
+                <span class="app-nav-dot"></span>
+                급여
+            </a>
+            <a class="app-nav-item disabled" href="#" onclick="return false;">
+                <span class="app-nav-dot"></span>
+                급여정산
+            </a>
+            <a class="app-nav-item disabled" href="#" onclick="return false;">
+                <span class="app-nav-dot"></span>
+                연말정산
+            </a>
+            <a class="app-nav-item disabled" href="#" onclick="return false;">
+                <span class="app-nav-dot"></span>
+                인사이트
+            </a>
+            <a class="app-nav-item disabled" href="#" onclick="return false;">
+                <span class="app-nav-dot"></span>
+                문서·증명서
+            </a>
+
+            <div class="app-nav-sep"></div>
+
+            <a class="app-nav-item"
+               th:classappend="${activeMenu}=='settings' ? ' active' : ''"
+               href="/admin/settings">
+                <span class="app-nav-dot"></span>
+                설정
+            </a>
+        </nav>
+
+        <div class="app-sidebar-footer">
+            <div class="text-secondary small">
+                로그인: <span sec:authentication="name"></span>
+            </div>
+        </div>
+    </aside>
+
+    <div class="app-body">
+        <header class="app-topbar">
+            <div class="app-search">
+                <input class="form-control form-control-sm"
+                       type="search"
+                       placeholder="구성원 또는 문서를 검색하세요"
+                       aria-label="Search"
+                       disabled>
+            </div>
+
+            <div class="app-topbar-actions">
+                <div class="app-chip" sec:authorize="isAuthenticated()">
+                    <span class="app-chip-dot"></span>
+                    <span sec:authentication="name"></span>
+                </div>
+                <form th:action="@{/logout}" method="post" class="m-0">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button class="btn btn-sm btn-outline-secondary" type="submit">로그아웃</button>
+                </form>
+            </div>
+        </header>
+
+        <main class="app-content">
+            <div class="app-page-head">
+                <h1 class="app-page-title" th:text="${pageTitle}">Page</h1>
+                <p class="app-page-desc text-secondary mb-0">
+                    필요한 정보를 관리하고 업무 흐름을 시작하세요.
+                </p>
+            </div>
+
+            <div class="app-page-body" th:replace="${content}">
+                <div>content</div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

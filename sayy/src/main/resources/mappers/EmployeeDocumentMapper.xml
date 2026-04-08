@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sayy.Mapper.EmployeeDocumentMapper">
+
+    <resultMap id="DocumentResultMap" type="com.example.sayy.Entity.EmployeeDocumentEntity">
+        <id property="id" column="id"/>
+        <result property="empNo" column="emp_no"/>
+        <result property="originalName" column="original_name"/>
+        <result property="storedName" column="stored_name"/>
+        <result property="fileSize" column="file_size"/>
+        <result property="contentType" column="content_type"/>
+        <result property="category" column="category"/>
+        <result property="uploadedBy" column="uploaded_by"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="selectByEmpNo" resultMap="DocumentResultMap">
+        SELECT * FROM employee_documents WHERE emp_no = #{empNo} ORDER BY created_at DESC
+    </select>
+
+    <select id="selectById" resultMap="DocumentResultMap">
+        SELECT * FROM employee_documents WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.example.sayy.Entity.EmployeeDocumentEntity" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO employee_documents (emp_no, original_name, stored_name, file_size, content_type, category, uploaded_by)
+        VALUES (#{empNo}, #{originalName}, #{storedName}, #{fileSize}, #{contentType}, #{category}, #{uploadedBy})
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM employee_documents WHERE id = #{id} AND emp_no = #{empNo}
+    </delete>
+
+</mapper>

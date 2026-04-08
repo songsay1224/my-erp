@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sayy.Mapper.CareerMapper">
+
+    <!-- ===== Career ===== -->
+    <resultMap id="CareerResultMap" type="com.example.sayy.Entity.CareerEntity">
+        <id property="id" column="id"/>
+        <result property="empNo" column="emp_no"/>
+        <result property="companyName" column="company_name"/>
+        <result property="department" column="department"/>
+        <result property="position" column="position"/>
+        <result property="startDate" column="start_date"/>
+        <result property="endDate" column="end_date"/>
+        <result property="description" column="description"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="selectCareersByEmpNo" resultMap="CareerResultMap">
+        SELECT * FROM employee_careers WHERE emp_no = #{empNo} ORDER BY end_date IS NULL DESC, end_date DESC, start_date DESC
+    </select>
+
+    <insert id="insertCareer" parameterType="com.example.sayy.Entity.CareerEntity" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO employee_careers (emp_no, company_name, department, position, start_date, end_date, description, sort_order)
+        VALUES (#{empNo}, #{companyName}, #{department}, #{position}, #{startDate}, #{endDate}, #{description}, #{sortOrder})
+    </insert>
+
+    <delete id="deleteCareer">
+        DELETE FROM employee_careers WHERE id = #{id} AND emp_no = #{empNo}
+    </delete>
+
+    <!-- ===== Education ===== -->
+    <resultMap id="EducationResultMap" type="com.example.sayy.Entity.EducationEntity">
+        <id property="id" column="id"/>
+        <result property="empNo" column="emp_no"/>
+        <result property="schoolName" column="school_name"/>
+        <result property="major" column="major"/>
+        <result property="degree" column="degree"/>
+        <result property="startDate" column="start_date"/>
+        <result property="endDate" column="end_date"/>
+        <result property="graduationStatus" column="graduation_status"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="selectEducationsByEmpNo" resultMap="EducationResultMap">
+        SELECT * FROM employee_educations WHERE emp_no = #{empNo} ORDER BY end_date DESC, id DESC
+    </select>
+
+    <insert id="insertEducation" parameterType="com.example.sayy.Entity.EducationEntity" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO employee_educations (emp_no, school_name, major, degree, start_date, end_date, graduation_status, sort_order)
+        VALUES (#{empNo}, #{schoolName}, #{major}, #{degree}, #{startDate}, #{endDate}, #{graduationStatus}, #{sortOrder})
+    </insert>
+
+    <delete id="deleteEducation">
+        DELETE FROM employee_educations WHERE id = #{id} AND emp_no = #{empNo}
+    </delete>
+
+    <!-- ===== Certificate ===== -->
+    <resultMap id="CertificateResultMap" type="com.example.sayy.Entity.CertificateEntity">
+        <id property="id" column="id"/>
+        <result property="empNo" column="emp_no"/>
+        <result property="certName" column="cert_name"/>
+        <result property="issuer" column="issuer"/>
+        <result property="acquiredDate" column="acquired_date"/>
+        <result property="expiryDate" column="expiry_date"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="selectCertificatesByEmpNo" resultMap="CertificateResultMap">
+        SELECT * FROM employee_certificates WHERE emp_no = #{empNo} ORDER BY acquired_date DESC, id DESC
+    </select>
+
+    <insert id="insertCertificate" parameterType="com.example.sayy.Entity.CertificateEntity" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO employee_certificates (emp_no, cert_name, issuer, acquired_date, expiry_date, sort_order)
+        VALUES (#{empNo}, #{certName}, #{issuer}, #{acquiredDate}, #{expiryDate}, #{sortOrder})
+    </insert>
+
+    <delete id="deleteCertificate">
+        DELETE FROM employee_certificates WHERE id = #{id} AND emp_no = #{empNo}
+    </delete>
+
+</mapper>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/admin-shell :: layout('거래처 관리', 'clients', ~{::section})}">
+<section>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <form class="d-flex gap-2 flex-wrap align-items-center" method="get" action="/admin/clients">
+            <select class="form-select form-select-sm" name="status" style="width:120px"
+                    onchange="this.form.submit()">
+                <option value="" th:selected="${selectedStatus == null or selectedStatus == ''}">전체</option>
+                <option value="ACTIVE"  th:selected="${selectedStatus == 'ACTIVE'}">거래중</option>
+                <option value="DORMANT" th:selected="${selectedStatus == 'DORMANT'}">휴면</option>
+                <option value="CLOSED"  th:selected="${selectedStatus == 'CLOSED'}">거래종료</option>
+            </select>
+            <div class="input-group input-group-sm" style="width:220px">
+                <input class="form-control" type="search" name="keyword"
+                       th:value="${keyword}" placeholder="거래처명, 대표자명 검색">
+                <button class="btn btn-outline-secondary" type="submit">검색</button>
+            </div>
+        </form>
+        <a class="btn btn-sm btn-dark" href="/admin/clients/new">
+            <i class="bi bi-plus-lg"></i> 거래처 추가
+        </a>
+    </div>
+
+    <div class="alert alert-success py-2" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-danger py-2" th:if="${error}" th:text="${error}"></div>
+
+    <div class="app-setting-card p-0">
+        <div th:if="${#lists.isEmpty(clients)}" class="text-secondary small p-4 text-center">
+            등록된 거래처가 없습니다.
+        </div>
+        <table class="table table-hover mb-0" th:if="${!#lists.isEmpty(clients)}">
+            <thead class="table-light">
+                <tr>
+                    <th>거래처명</th>
+                    <th class="d-none d-md-table-cell">대표자</th>
+                    <th class="d-none d-md-table-cell">연락처</th>
+                    <th class="d-none d-md-table-cell">업종</th>
+                    <th>상태</th>
+                    <th class="d-none d-md-table-cell">등록일</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="c : ${clients}" style="cursor:pointer"
+                    th:onclick="|location.href='/admin/clients/${c.id}'|">
+                    <td class="fw-semibold align-middle" th:text="${c.name}">-</td>
+                    <td class="d-none d-md-table-cell align-middle text-secondary"
+                        th:text="${c.ceoName != null ? c.ceoName : '-'}">-</td>
+                    <td class="d-none d-md-table-cell align-middle text-secondary"
+                        th:text="${c.phone != null ? c.phone : '-'}">-</td>
+                    <td class="d-none d-md-table-cell align-middle text-secondary"
+                        th:text="${c.industry != null ? c.industry : '-'}">-</td>
+                    <td class="align-middle">
+                        <span class="badge"
+                              th:classappend="${c.status == 'ACTIVE' ? ' text-bg-success' : (c.status == 'DORMANT' ? ' text-bg-warning' : ' text-bg-secondary')}"
+                              th:text="${c.statusLabel}">-</span>
+                    </td>
+                    <td class="d-none d-md-table-cell align-middle text-secondary small"
+                        th:text="${#temporals.format(c.createdAt, 'yyyy-MM-dd')}">-</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+</html>

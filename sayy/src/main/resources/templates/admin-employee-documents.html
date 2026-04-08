@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/admin-shell :: layout('구성원', 'members', ~{::section})}">
+<section>
+    <div th:replace="~{fragments/employee-menu :: menu('list')}"></div>
+
+    <div class="text-secondary small mb-3">
+        구성원 / <span class="fw-semibold" th:text="${employee.name}">이름</span>
+    </div>
+
+    <div class="app-profile-head">
+        <div class="app-profile-avatar" aria-hidden="true">
+            <span th:text="${employee.name != null and !employee.name.isBlank() ? employee.name.substring(0, 1) : 'P'}">P</span>
+        </div>
+        <div class="app-profile-main">
+            <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="app-profile-name" th:text="${employee.name}">이름</div>
+                        <span class="badge"
+                              th:classappend="${
+                                  employee.employmentStatus == T(com.example.sayy.Entity.EmploymentStatus).ACTIVE ? ' app-badge-active' :
+                                  (employee.employmentStatus == T(com.example.sayy.Entity.EmploymentStatus).LEAVE ? ' app-badge-leave' : ' app-badge-terminated')
+                              }"
+                              th:text="${employee.employmentStatus != null ? employee.employmentStatus.label : '재직'}">재직</span>
+                    </div>
+                    <div class="app-profile-meta">
+                        <div>조직 <span class="text-secondary ms-2" th:text="${employee.departmentName != null ? employee.departmentName : '-'}">-</span></div>
+                        <div class="ms-3">직무 <span class="text-secondary ms-2" th:text="${employee.jobNames != null ? employee.jobNames : '-'}">-</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <ul class="nav app-profile-tabs mt-3">
+                <li class="nav-item"><a class="nav-link" th:href="@{|/admin/employees/${employee.empNo}|}">인사 정보</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{|/admin/employees/${employee.empNo}/personal|}">개인 정보</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{|/admin/employees/${employee.empNo}/contract|}">계약정보</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{|/admin/employees/${employee.empNo}/career|}">경력·학력</a></li>
+                <!--<li class="nav-item"><a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">인사노트</a></li>-->
+                <li class="nav-item"><a class="nav-link active" th:href="@{|/admin/employees/${employee.empNo}/documents|}">문서</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="alert alert-success py-2" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-danger py-2" th:if="${error}" th:text="${error}"></div>
+
+    <!-- 숨겨진 업로드 폼 -->
+    <form id="uploadForm"
+          th:action="@{|/admin/employees/${employee.empNo}/documents/upload|}"
+          method="post" enctype="multipart/form-data" class="d-none">
+        <input type="hidden" name="category" id="uploadCategory" value="">
+        <input type="file" id="uploadFileInput" name="file" style="display:none">
+    </form>
+
+    <div class="app-profile-section">
+        <div class="app-profile-card">
+            <div class="app-profile-card-head">
+                <div class="fw-bold">문서</div>
+                <button class="btn btn-sm btn-outline-dark" type="button" id="uploadTriggerBtn">
+                    <i class="bi bi-upload"></i> 업로드
+                </button>
+            </div>
+
+            <!-- 상단 업로드 패널: 카테고리 선택 -->
+            <div class="doc-upload-panel border-bottom bg-light" id="uploadPanel" style="display:none">
+                <div class="p-3">
+                    <div class="text-secondary small mb-2">어떤 문서를 업로드하시겠습니까?</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-sm btn-outline-secondary doc-cat-btn"
+                                th:each="cat : ${documentCategories}"
+                                th:text="${cat}"
+                                th:attr="data-category=${cat}"
+                                type="button">문서명</button>
+                        <button class="btn btn-sm btn-outline-secondary doc-cat-btn"
+                                data-category="기타" type="button">기타</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 문서 목록 -->
+            <div class="app-profile-card-body p-0">
+                <table class="table mb-0 doc-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:160px">문서</th>
+                            <th>파일</th>
+                            <th class="d-none d-md-table-cell" style="width:110px">업로드일</th>
+                            <th style="width:90px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- ===== 정해진 카테고리 행 ===== -->
+                        <th:block th:each="cat,catStat : ${documentCategories}"
+                                  th:with="catDocs=${docsByCategory.get(cat)}">
+
+                            <!-- 대표 행 (항상 표시) -->
+                            <tr class="doc-category-row"
+                                th:attr="data-cat-id=${'cat-' + catStat.index}">
+
+                                <td class="fw-semibold align-middle">
+                                    <!-- 여러 파일이면 펼치기 화살표 표시 -->
+                                    <span th:if="${catDocs != null and catDocs.size() > 1}"
+                                          class="doc-expand-toggle me-1 text-secondary"
+                                          th:attr="data-target=${'cat-' + catStat.index}"
+                                          style="cursor:pointer; user-select:none">▸</span>
+                                    <span th:text="${cat}">문서명</span>
+                                    <!-- 파일 개수 배지 (2개 이상일 때) -->
+                                    <span th:if="${catDocs != null and catDocs.size() > 1}"
+                                          class="badge text-bg-light ms-1 small"
+                                          th:text="${catDocs.size()}">3</span>
+                                </td>
+
+                                <td class="align-middle">
+                                    <!-- 파일 있음: 최신 파일 표시 -->
+                                    <div th:if="${catDocs != null and !catDocs.isEmpty()}"
+                                         class="d-flex align-items-center gap-2">
+                                        <i class="bi bi-file-earmark-arrow-down text-primary"></i>
+                                        <a class="text-decoration-none"
+                                           th:href="@{|/admin/employees/${employee.empNo}/documents/${catDocs[0].id}/download|}"
+                                           th:text="${catDocs[0].originalName}">파일명.pdf</a>
+                                    </div>
+                                    <!-- 파일 없음 -->
+                                    <span th:if="${catDocs == null or catDocs.isEmpty()}"
+                                          class="text-secondary small">등록하지 않음</span>
+                                </td>
+
+                                <td class="d-none d-md-table-cell align-middle text-secondary small">
+                                    <span th:if="${catDocs != null and !catDocs.isEmpty()}"
+                                          th:text="${#temporals.format(catDocs[0].createdAt, 'yy. M. d')}">-</span>
+                                    <span th:if="${catDocs == null or catDocs.isEmpty()}">-</span>
+                                </td>
+
+                                <td class="align-middle text-end">
+                                    <div class="d-flex gap-1 justify-content-end">
+                                        <!-- 업로드 버튼 (항상) -->
+                                        <button class="btn btn-sm btn-outline-secondary doc-cat-btn"
+                                                th:attr="data-category=${cat}"
+                                                type="button" title="업로드">
+                                            <i class="bi bi-upload"></i>
+                                        </button>
+                                        <!-- 최신 파일 삭제 (있을 때만) -->
+                                        <form th:if="${catDocs != null and !catDocs.isEmpty()}"
+                                              th:action="@{|/admin/employees/${employee.empNo}/documents/${catDocs[0].id}/delete|}"
+                                              method="post"
+                                              onsubmit="return confirm('문서를 삭제하시겠습니까?')">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="삭제">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 확장 행: 2번째 이상 파일들 (펼치면 표시) -->
+                            <th:block th:if="${catDocs != null and catDocs.size() > 1}">
+                                <th:block th:each="doc,docStat : ${catDocs}" th:if="${docStat.index > 0}">
+                                    <tr class="doc-sub-row"
+                                        th:attr="data-parent=${'cat-' + catStat.index}"
+                                        style="display:none">
+                                        <td class="ps-4 text-secondary small align-middle">└</td>
+                                        <td class="align-middle">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="bi bi-file-earmark text-secondary"></i>
+                                                <a class="text-decoration-none text-secondary"
+                                                   th:href="@{|/admin/employees/${employee.empNo}/documents/${doc.id}/download|}"
+                                                   th:text="${doc.originalName}">파일명.pdf</a>
+                                            </div>
+                                        </td>
+                                        <td class="d-none d-md-table-cell align-middle text-secondary small"
+                                            th:text="${#temporals.format(doc.createdAt, 'yy. M. d')}">-</td>
+                                        <td class="align-middle text-end">
+                                            <form th:action="@{|/admin/employees/${employee.empNo}/documents/${doc.id}/delete|}"
+                                                  method="post"
+                                                  onsubmit="return confirm('문서를 삭제하시겠습니까?')">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="삭제">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                </th:block>
+                            </th:block>
+
+                        </th:block>
+
+                        <!-- ===== 기타 / 정해진 카테고리 외 파일 ===== -->
+                        <tr th:each="doc : ${documents}"
+                            th:if="${!#lists.contains(documentCategories, doc.category)}">
+                            <td class="align-middle">
+                                <span class="badge text-bg-light"
+                                      th:text="${doc.category != null ? doc.category : '기타'}">기타</span>
+                            </td>
+                            <td class="align-middle">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-file-earmark-arrow-down text-primary"></i>
+                                    <a class="text-decoration-none"
+                                       th:href="@{|/admin/employees/${employee.empNo}/documents/${doc.id}/download|}"
+                                       th:text="${doc.originalName}">파일명.pdf</a>
+                                </div>
+                            </td>
+                            <td class="d-none d-md-table-cell align-middle text-secondary small"
+                                th:text="${#temporals.format(doc.createdAt, 'yy. M. d')}">-</td>
+                            <td class="align-middle text-end">
+                                <form th:action="@{|/admin/employees/${employee.empNo}/documents/${doc.id}/delete|}"
+                                      method="post" onsubmit="return confirm('문서를 삭제하시겠습니까?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="삭제">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── 상단 업로드 버튼 → 카테고리 패널 토글
+        document.getElementById('uploadTriggerBtn').addEventListener('click', function () {
+            var panel = document.getElementById('uploadPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // ── 카테고리 버튼 클릭 → 파일 선택 → 즉시 제출
+        function bindUploadBtns() {
+            document.querySelectorAll('.doc-cat-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var category = this.dataset.category || '기타';
+                    document.getElementById('uploadCategory').value = category;
+                    // 패널 닫기
+                    document.getElementById('uploadPanel').style.display = 'none';
+                    var fileInput = document.getElementById('uploadFileInput');
+                    // 같은 파일 재선택도 감지하려면 value 초기화
+                    fileInput.value = '';
+                    fileInput.onchange = function () {
+                        if (fileInput.files.length > 0) {
+                            document.getElementById('uploadForm').submit();
+                        }
+                    };
+                    fileInput.click();
+                });
+            });
+        }
+        bindUploadBtns();
+
+        // ── 행 확장/접기 (▸ 클릭)
+        document.querySelectorAll('.doc-expand-toggle').forEach(function (toggle) {
+            toggle.addEventListener('click', function () {
+                var targetId = this.dataset.target;
+                var isOpen = this.classList.contains('expanded');
+                // 하위 행 토글
+                document.querySelectorAll('.doc-sub-row[data-parent="' + targetId + '"]').forEach(function (row) {
+                    row.style.display = isOpen ? 'none' : '';
+                });
+                // 화살표 방향 전환
+                this.textContent = isOpen ? '▸' : '▾';
+                this.classList.toggle('expanded', !isOpen);
+            });
+        });
+
+        // ── 파일이 2개 이상인 행은 클릭하면 자동 펼치기 (셀 전체 클릭)
+        document.querySelectorAll('.doc-category-row').forEach(function (row) {
+            var toggle = row.querySelector('.doc-expand-toggle');
+            if (!toggle) return;
+            row.style.cursor = 'pointer';
+            row.addEventListener('click', function (e) {
+                // 버튼, 링크, form 안은 제외
+                if (e.target.closest('button, a, form')) return;
+                toggle.click();
+            });
+        });
+    </script>
+</section>
+</html>

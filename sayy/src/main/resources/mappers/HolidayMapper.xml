@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.sayy.Mapper.HolidayMapper">
+
+    <resultMap id="HolidayResultMap" type="com.example.sayy.Entity.HolidayEntity">
+        <id property="locDate" column="loc_date"/>
+        <result property="name" column="name"/>
+        <result property="holiday" column="is_holiday"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="selectByLocDate" resultMap="HolidayResultMap">
+        SELECT loc_date, name, is_holiday, created_at
+        FROM holidays
+        WHERE loc_date = #{locDate}
+    </select>
+
+    <insert id="upsert" parameterType="com.example.sayy.Entity.HolidayEntity">
+        INSERT INTO holidays (loc_date, name, is_holiday)
+        VALUES (#{locDate}, #{name}, #{holiday})
+        ON DUPLICATE KEY UPDATE
+          name = VALUES(name),
+          is_holiday = VALUES(is_holiday)
+    </insert>
+
+    <select id="selectByYear" resultMap="HolidayResultMap">
+        SELECT loc_date, name, is_holiday, created_at
+        FROM holidays
+        WHERE YEAR(loc_date) = #{year}
+        ORDER BY loc_date ASC
+    </select>
+</mapper>
+

@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sayy.Mapper.ProjectMapper">
+
+    <resultMap id="ProjectResultMap" type="com.example.sayy.Entity.ProjectEntity">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="clientId" column="client_id"/>
+        <result property="clientName" column="client_name"/>
+        <result property="status" column="status"/>
+        <result property="startDate" column="start_date"/>
+        <result property="endDate" column="end_date"/>
+        <result property="contractAmount" column="contract_amount"/>
+        <result property="description" column="description"/>
+        <result property="memo" column="memo"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <!-- 기본정보 -->
+        <result property="projectCode" column="project_code"/>
+        <result property="approvedDate" column="approved_date"/>
+        <result property="pmEmpNo" column="pm_emp_no"/>
+        <result property="executiveEmpNo" column="executive_emp_no"/>
+        <result property="businessPlace" column="business_place"/>
+        <result property="categoryMajor" column="category_major"/>
+        <result property="categoryMinor" column="category_minor"/>
+        <result property="division" column="division"/>
+        <result property="department" column="department"/>
+        <result property="orgUnitId" column="org_unit_id"/>
+        <result property="participationType" column="participation_type"/>
+        <result property="supplyType" column="supply_type"/>
+        <result property="salesEmpNo" column="sales_emp_no"/>
+        <!-- join 조회 -->
+        <result property="pmName" column="pm_name"/>
+        <result property="executiveName" column="executive_name"/>
+        <result property="salesName" column="sales_name"/>
+        <result property="orgUnitName" column="org_unit_name"/>
+        <!-- 계약일반 -->
+        <result property="customerAgency" column="customer_agency"/>
+        <result property="customerOrdering" column="customer_ordering"/>
+        <result property="contractName" column="contract_name"/>
+        <result property="contractDate" column="contract_date"/>
+        <result property="contractStart" column="contract_start"/>
+        <result property="contractEnd" column="contract_end"/>
+        <result property="asStart" column="as_start"/>
+        <result property="asEnd" column="as_end"/>
+        <result property="ourShareRate" column="our_share_rate"/>
+        <result property="ourAmount" column="our_amount"/>
+        <result property="ourAmountVatEx" column="our_amount_vat_ex"/>
+        <result property="contractAmountVatEx" column="contract_amount_vat_ex"/>
+        <result property="paymentCondition" column="payment_condition"/>
+        <result property="defectPeriod" column="defect_period"/>
+        <result property="penaltyRate" column="penalty_rate"/>
+    </resultMap>
+
+    <resultMap id="ContractResultMap" type="com.example.sayy.Entity.ContractEntity">
+        <id property="id" column="id"/>
+        <result property="projectId" column="project_id"/>
+        <result property="title" column="title"/>
+        <result property="contractType" column="contract_type"/>
+        <result property="contractDate" column="contract_date"/>
+        <result property="amount" column="amount"/>
+        <result property="status" column="status"/>
+        <result property="originalName" column="original_name"/>
+        <result property="storedName" column="stored_name"/>
+        <result property="fileSize" column="file_size"/>
+        <result property="contentType" column="content_type"/>
+        <result property="memo" column="memo"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="ProjectResultMap">
+        SELECT p.*, c.name AS client_name
+        FROM projects p
+        LEFT JOIN clients c ON c.id = p.client_id
+        <where>
+            <if test="status != null and status != ''">AND p.status = #{status}</if>
+            <if test="keyword != null and keyword != ''">
+                AND (p.name LIKE CONCAT('%', #{keyword}, '%')
+                  OR c.name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY p.updated_at DESC
+    </select>
+
+    <select id="selectById" resultMap="ProjectResultMap">
+        SELECT p.*,
+               c.name AS client_name,
+               pm_e.name AS pm_name,
+               exec_e.name AS executive_name,
+               sales_e.name AS sales_name,
+               ou.name AS org_unit_name
+        FROM projects p
+        LEFT JOIN clients c ON c.id = p.client_id
+        LEFT JOIN employees pm_e ON pm_e.emp_no = p.pm_emp_no
+        LEFT JOIN employees exec_e ON exec_e.emp_no = p.executive_emp_no
+        LEFT JOIN employees sales_e ON sales_e.emp_no = p.sales_emp_no
+        LEFT JOIN org_units ou ON ou.id = p.org_unit_id
+        WHERE p.id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.example.sayy.Entity.ProjectEntity" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO projects (name, client_id, status, start_date, end_date, contract_amount, description, memo,
+            project_code, approved_date, pm_emp_no, executive_emp_no, business_place,
+            category_major, category_minor, division, department, org_unit_id,
+            participation_type, supply_type, sales_emp_no,
+            customer_agency, customer_ordering, contract_name, contract_date, contract_start, contract_end,
+            as_start, as_end, our_share_rate, our_amount, our_amount_vat_ex, contract_amount_vat_ex,
+            payment_condition, defect_period, penalty_rate)
+        VALUES (#{name}, #{clientId}, #{status}, #{startDate}, #{endDate}, #{contractAmount}, #{description}, #{memo},
+            #{projectCode}, #{approvedDate}, #{pmEmpNo}, #{executiveEmpNo}, #{businessPlace},
+            #{categoryMajor}, #{categoryMinor}, #{division}, #{department}, #{orgUnitId},
+            #{participationType}, #{supplyType}, #{salesEmpNo},
+            #{customerAgency}, #{customerOrdering}, #{contractName}, #{contractDate}, #{contractStart}, #{contractEnd},
+            #{asStart}, #{asEnd}, #{ourShareRate}, #{ourAmount}, #{ourAmountVatEx}, #{contractAmountVatEx},
+            #{paymentCondition}, #{defectPeriod}, #{penaltyRate})
+    </insert>
+
+    <update id="update" parameterType="com.example.sayy.Entity.ProjectEntity">
+        UPDATE projects SET
+            name = #{name}, client_id = #{clientId}, status = #{status},
+            start_date = #{startDate}, end_date = #{endDate},
+            contract_amount = #{contractAmount}, description = #{description}, memo = #{memo},
+            project_code = #{projectCode}, approved_date = #{approvedDate},
+            pm_emp_no = #{pmEmpNo}, executive_emp_no = #{executiveEmpNo},
+            business_place = #{businessPlace}, category_major = #{categoryMajor},
+            category_minor = #{categoryMinor}, division = #{division}, department = #{department},
+            org_unit_id = #{orgUnitId}, participation_type = #{participationType},
+            supply_type = #{supplyType}, sales_emp_no = #{salesEmpNo},
+            customer_agency = #{customerAgency}, customer_ordering = #{customerOrdering},
+            contract_name = #{contractName}, contract_date = #{contractDate},
+            contract_start = #{contractStart}, contract_end = #{contractEnd},
+            as_start = #{asStart}, as_end = #{asEnd},
+            our_share_rate = #{ourShareRate}, our_amount = #{ourAmount},
+            our_amount_vat_ex = #{ourAmountVatEx}, contract_amount_vat_ex = #{contractAmountVatEx},
+            payment_condition = #{paymentCondition}, defect_period = #{defectPeriod},
+            penalty_rate = #{penaltyRate}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">DELETE FROM projects WHERE id = #{id}</delete>
+
+    <!-- 계약서 -->
+    <select id="selectContractsByProjectId" resultMap="ContractResultMap">
+        SELECT * FROM contracts WHERE project_id = #{projectId}
+        ORDER BY contract_date DESC, id DESC
+    </select>
+
+    <select id="selectContractById" resultMap="ContractResultMap">
+        SELECT * FROM contracts WHERE id = #{id}
+    </select>
+
+    <insert id="insertContract" parameterType="com.example.sayy.Entity.ContractEntity" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO contracts (project_id, title, contract_type, contract_date, amount, status,
+                               original_name, stored_name, file_size, content_type, memo)
+        VALUES (#{projectId}, #{title}, #{contractType}, #{contractDate}, #{amount}, #{status},
+                #{originalName}, #{storedName}, #{fileSize}, #{contentType}, #{memo})
+    </insert>
+
+    <update id="updateContract" parameterType="com.example.sayy.Entity.ContractEntity">
+        UPDATE contracts SET
+            title = #{title}, contract_type = #{contractType}, contract_date = #{contractDate},
+            amount = #{amount}, status = #{status}, memo = #{memo}
+        WHERE id = #{id} AND project_id = #{projectId}
+    </update>
+
+    <delete id="deleteContract">
+        DELETE FROM contracts WHERE id = #{id} AND project_id = #{projectId}
+    </delete>
+
+</mapper>

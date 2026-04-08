@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sayy.Mapper.CompanyInfoMapper">
+
+    <resultMap id="CompanyInfoMap" type="com.example.sayy.Entity.CompanyInfoEntity">
+        <id column="id" property="id"/>
+        <result column="company_name" property="companyName"/>
+        <result column="ceo_name" property="ceoName"/>
+        <result column="phone" property="phone"/>
+        <result column="founded_date" property="foundedDate"/>
+        <result column="zip_code" property="zipCode"/>
+        <result column="address" property="address"/>
+        <result column="address_detail" property="addressDetail"/>
+        <result column="business_reg_no" property="businessRegNo"/>
+        <result column="corporate_reg_no" property="corporateRegNo"/>
+        <result column="logo_path" property="logoPath"/>
+        <result column="seal_path" property="sealPath"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="selectOne" resultMap="CompanyInfoMap">
+        SELECT *
+        FROM company_info
+        WHERE id = 1
+    </select>
+
+    <insert id="upsert" parameterType="com.example.sayy.Entity.CompanyInfoEntity">
+        INSERT INTO company_info (
+            id,
+            company_name,
+            ceo_name,
+            phone,
+            founded_date,
+            zip_code,
+            address,
+            address_detail,
+            business_reg_no,
+            corporate_reg_no,
+            logo_path,
+            seal_path
+        ) VALUES (
+            1,
+            #{companyName},
+            #{ceoName},
+            #{phone},
+            #{foundedDate},
+            #{zipCode},
+            #{address},
+            #{addressDetail},
+            #{businessRegNo},
+            #{corporateRegNo},
+            #{logoPath},
+            #{sealPath}
+        )
+        ON DUPLICATE KEY UPDATE
+            company_name = VALUES(company_name),
+            ceo_name = VALUES(ceo_name),
+            phone = VALUES(phone),
+            founded_date = VALUES(founded_date),
+            zip_code = VALUES(zip_code),
+            address = VALUES(address),
+            address_detail = VALUES(address_detail),
+            business_reg_no = VALUES(business_reg_no),
+            corporate_reg_no = VALUES(corporate_reg_no),
+            logo_path = VALUES(logo_path),
+            seal_path = VALUES(seal_path)
+    </insert>
+
+    <update id="updateLogoPath">
+        UPDATE company_info
+        SET logo_path = #{logoPath}
+        WHERE id = 1
+    </update>
+
+    <update id="updateSealPath">
+        UPDATE company_info
+        SET seal_path = #{sealPath}
+        WHERE id = 1
+    </update>
+
+</mapper>
+

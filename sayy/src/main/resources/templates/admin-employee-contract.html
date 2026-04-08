@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/admin-shell :: layout('구성원', 'members', ~{::section})}">
+<section>
+    <div th:replace="~{fragments/employee-menu :: menu('list')}"></div>
+
+    <div class="text-secondary small mb-3">
+        구성원 / <span class="fw-semibold" th:text="${employee.name}">이름</span>
+    </div>
+
+    <div class="app-profile-head">
+        <div class="app-profile-avatar" aria-hidden="true">
+            <span th:text="${employee.name != null and !employee.name.isBlank() ? employee.name.substring(0, 1) : 'P'}">P</span>
+        </div>
+        <div class="app-profile-main">
+            <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="app-profile-name" th:text="${employee.name}">이름</div>
+                        <span class="badge"
+                              th:classappend="${
+                                  employee.employmentStatus == T(com.example.sayy.Entity.EmploymentStatus).ACTIVE ? ' app-badge-active' :
+                                  (employee.employmentStatus == T(com.example.sayy.Entity.EmploymentStatus).LEAVE ? ' app-badge-leave' : ' app-badge-terminated')
+                              }"
+                              th:text="${employee.employmentStatus != null ? employee.employmentStatus.label : '재직'}">재직</span>
+                    </div>
+                    <div class="app-profile-meta">
+                        <div>조직 <span class="text-secondary ms-2" th:text="${employee.departmentName != null ? employee.departmentName : '-'}">-</span></div>
+                        <div class="ms-3">직무 <span class="text-secondary ms-2" th:text="${employee.jobNames != null ? employee.jobNames : '-'}">-</span></div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="vr"></div>
+                    <a class="btn btn-sm btn-outline-dark" th:href="@{|/admin/employees/${employee.empNo}/contract/edit|}">
+                        <i class="bi bi-pencil"></i> 계약정보 수정
+                    </a>
+                </div>
+            </div>
+
+
+            <ul class="nav app-profile-tabs mt-3">
+                <li class="nav-item"><a class="nav-link" th:href="@{|/admin/employees/${employee.empNo}|}">인사 정보</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{|/admin/employees/${employee.empNo}/personal|}">개인 정보</a></li>
+                <li class="nav-item"><a class="nav-link active" th:href="@{|/admin/employees/${employee.empNo}/contract|}">계약정보</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{|/admin/employees/${employee.empNo}/career|}">경력·학력</a></li>
+               <!-- <li class="nav-item"><a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">인사노트</a></li>-->
+                <li class="nav-item"><a class="nav-link" th:href="@{|/admin/employees/${employee.empNo}/documents|}">문서</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="alert alert-success py-2" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-danger py-2" th:if="${error}" th:text="${error}"></div>
+
+    <div class="app-profile-section">
+
+        <!-- 근로계약 -->
+        <div class="app-profile-card">
+            <div class="app-profile-card-head">
+                <div class="fw-bold">근로계약</div>
+                <a class="btn btn-sm btn-outline-secondary" th:href="@{|/admin/employees/${employee.empNo}/contract/edit|}">
+                    <i class="bi bi-pencil"></i>
+                </a>
+            </div>
+            <div class="app-profile-card-body">
+                <div class="row g-0 app-kv">
+                    <div class="col-12 col-md-6">
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">근로 유형</div>
+                            <div class="app-kv-val">
+                                <span class="badge text-bg-secondary"
+                                      th:text="${employee.employmentType != null ? employee.employmentType.label : '-'}">-</span>
+                            </div>
+                        </div>
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">근로계약 기간</div>
+                            <div class="app-kv-val">
+                                <span th:if="${employee.laborContractStart != null}"
+                                      th:text="${employee.laborContractStart + ' ~ ' + (employee.laborContractEnd != null ? employee.laborContractEnd : '계속')}">-</span>
+                                <span th:if="${employee.laborContractStart == null}" class="text-secondary">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">수습기간</div>
+                            <div class="app-kv-val">
+                                <span th:if="${employee.probationStart != null}"
+                                      th:text="${employee.probationStart + ' ~ ' + (employee.probationEnd != null ? employee.probationEnd : '-')}">-</span>
+                                <span class="badge text-bg-light ms-2"
+                                      th:if="${employee.probationPayRate != null}"
+                                      th:text="${'급여지급률 ' + employee.probationPayRate + '%'}">-</span>
+                                <span th:if="${employee.probationStart == null}" class="text-secondary">-</span>
+                            </div>
+                        </div>
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">4대 보험</div>
+                            <div class="app-kv-val">
+                                <span class="badge"
+                                      th:classappend="${employee.fourInsured == true} ? ' text-bg-success' : ' text-bg-light'"
+                                      th:text="${employee.fourInsured == null ? '-' : (employee.fourInsured ? '가입' : '미가입')}">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 임금계약 -->
+        <div class="app-profile-card mt-3">
+            <div class="app-profile-card-head">
+                <div class="fw-bold">임금계약</div>
+                <a class="btn btn-sm btn-outline-secondary" th:href="@{|/admin/employees/${employee.empNo}/contract/edit|}">
+                    <i class="bi bi-pencil"></i>
+                </a>
+            </div>
+            <div class="app-profile-card-body">
+                <div class="row g-0 app-kv">
+                    <div class="col-12 col-md-6">
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">소득 구분</div>
+                            <div class="app-kv-val" th:text="${employee.incomeType != null ? employee.incomeType : (employee.taxScheme != null ? employee.taxScheme.label : '-')}">-</div>
+                        </div>
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">임금계약 기간</div>
+                            <div class="app-kv-val">
+                                <span th:if="${employee.wageContractStart != null}"
+                                      th:text="${employee.wageContractStart + ' ~ ' + (employee.wageContractEnd != null ? employee.wageContractEnd : '계속')}">-</span>
+                                <span th:if="${employee.wageContractStart == null}" class="text-secondary">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">월 기본급</div>
+                            <div class="app-kv-val">
+                                <span th:if="${employee.monthlySalary != null}"
+                                      th:text="${#numbers.formatInteger(employee.monthlySalary, 0, 'COMMA') + ' 원'}">-</span>
+                                <span th:if="${employee.monthlySalary == null}" class="text-secondary">-</span>
+                            </div>
+                        </div>
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">계약 종료일</div>
+                            <div class="app-kv-val" th:text="${employee.contractEndDate != null ? employee.contractEndDate : '-'}">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+</html>

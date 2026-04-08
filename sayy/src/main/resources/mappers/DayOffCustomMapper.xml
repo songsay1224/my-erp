@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.sayy.Mapper.DayOffCustomMapper">
+
+    <resultMap id="DayOffCustomResultMap" type="com.example.sayy.Entity.DayOffCustomEntity">
+        <id property="id" column="id"/>
+        <result property="locDate" column="loc_date"/>
+        <result property="name" column="name"/>
+        <result property="repeatAnnually" column="repeat_annually"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="selectByYear" resultMap="DayOffCustomResultMap">
+        SELECT id, loc_date, name, repeat_annually, created_at
+        FROM days_off_custom
+        WHERE YEAR(loc_date) = #{year}
+        ORDER BY loc_date ASC
+    </select>
+
+    <select id="selectRepeatAnnually" resultMap="DayOffCustomResultMap">
+        SELECT id, loc_date, name, repeat_annually, created_at
+        FROM days_off_custom
+        WHERE repeat_annually = TRUE
+        ORDER BY loc_date ASC
+    </select>
+
+    <select id="selectByLocDate" resultMap="DayOffCustomResultMap">
+        SELECT id, loc_date, name, repeat_annually, created_at
+        FROM days_off_custom
+        WHERE loc_date = #{locDate}
+        LIMIT 1
+    </select>
+
+    <insert id="upsert" parameterType="com.example.sayy.Entity.DayOffCustomEntity">
+        INSERT INTO days_off_custom (loc_date, name, repeat_annually)
+        VALUES (#{locDate}, #{name}, #{repeatAnnually})
+        ON DUPLICATE KEY UPDATE
+          name = VALUES(name),
+          repeat_annually = VALUES(repeat_annually)
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM days_off_custom WHERE id = #{id}
+    </delete>
+</mapper>
+

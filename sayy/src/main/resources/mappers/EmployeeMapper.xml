@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.sayy.Mapper.EmployeeMapper">
+
+    <resultMap id="EmployeeWithUserResultMap" type="com.example.sayy.Entity.EmployeeEntity">
+        <id property="empNo" column="emp_no"/>
+        <result property="loginUsername" column="login_username"/>
+        <result property="name" column="name"/>
+        <result property="employmentType" column="employment_type" javaType="com.example.sayy.Entity.EmploymentType"/>
+        <result property="employmentStatus" column="employment_status" javaType="com.example.sayy.Entity.EmploymentStatus"/>
+        <result property="fourInsured" column="four_insured"/>
+        <result property="taxScheme" column="tax_scheme" javaType="com.example.sayy.Entity.TaxScheme"/>
+        <result property="contractEndDate" column="contract_end_date"/>
+        <result property="hireDate" column="hire_date"/>
+        <result property="groupHireDate" column="group_hire_date"/>
+        <result property="positionName" column="position_name"/>
+        <result property="departmentName" column="department_name"/>
+        <result property="jobNames" column="job_names"/>
+        <result property="identificationNumber" column="identification_number"/>
+        <result property="age" column="age"/>
+        <result property="yearsOfService" column="years_of_service"/>
+        <result property="email" column="email"/>
+        <result property="birthDate" column="birth_date"/>
+        <result property="terminationDate" column="termination_date"/>
+        <result property="hrMemo" column="hr_memo"/>
+        <result property="nameEn" column="name_en"/>
+        <result property="gender" column="gender"/>
+        <result property="nationality" column="nationality"/>
+        <result property="phone" column="phone"/>
+        <result property="bankName" column="bank_name"/>
+        <result property="bankAccount" column="bank_account"/>
+        <result property="bankHolder" column="bank_holder"/>
+        <result property="laborContractStart" column="labor_contract_start"/>
+        <result property="laborContractEnd" column="labor_contract_end"/>
+        <result property="probationStart" column="probation_start"/>
+        <result property="probationEnd" column="probation_end"/>
+        <result property="probationPayRate" column="probation_pay_rate"/>
+        <result property="incomeType" column="income_type"/>
+        <result property="wageContractStart" column="wage_contract_start"/>
+        <result property="wageContractEnd" column="wage_contract_end"/>
+        <result property="monthlySalary" column="monthly_salary"/>
+        <result property="createdAt" column="created_at"/>
+
+        <association property="user" javaType="com.example.sayy.Entity.UserEntity" notNullColumn="u_username">
+            <id property="username" column="u_username"/>
+            <result property="pwd" column="u_pwd"/>
+            <result property="role" column="u_role"/>
+            <result property="enabled" column="u_enabled"/>
+            <result property="createdAt" column="u_created_at"/>
+            <result property="employeeNo" column="u_employee_no"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="EmployeeOnlyResultMap" type="com.example.sayy.Entity.EmployeeEntity">
+        <id property="empNo" column="emp_no"/>
+        <result property="loginUsername" column="login_username"/>
+        <result property="name" column="name"/>
+        <result property="employmentType" column="employment_type" javaType="com.example.sayy.Entity.EmploymentType"/>
+        <result property="employmentStatus" column="employment_status" javaType="com.example.sayy.Entity.EmploymentStatus"/>
+        <result property="fourInsured" column="four_insured"/>
+        <result property="taxScheme" column="tax_scheme" javaType="com.example.sayy.Entity.TaxScheme"/>
+        <result property="contractEndDate" column="contract_end_date"/>
+        <result property="hireDate" column="hire_date"/>
+        <result property="groupHireDate" column="group_hire_date"/>
+        <result property="positionName" column="position_name"/>
+        <result property="departmentName" column="department_name"/>
+        <result property="jobNames" column="job_names"/>
+        <result property="identificationNumber" column="identification_number"/>
+        <result property="age" column="age"/>
+        <result property="yearsOfService" column="years_of_service"/>
+        <result property="email" column="email"/>
+        <result property="birthDate" column="birth_date"/>
+        <result property="terminationDate" column="termination_date"/>
+        <result property="hrMemo" column="hr_memo"/>
+        <result property="nameEn" column="name_en"/>
+        <result property="gender" column="gender"/>
+        <result property="nationality" column="nationality"/>
+        <result property="phone" column="phone"/>
+        <result property="bankName" column="bank_name"/>
+        <result property="bankAccount" column="bank_account"/>
+        <result property="bankHolder" column="bank_holder"/>
+        <result property="laborContractStart" column="labor_contract_start"/>
+        <result property="laborContractEnd" column="labor_contract_end"/>
+        <result property="probationStart" column="probation_start"/>
+        <result property="probationEnd" column="probation_end"/>
+        <result property="probationPayRate" column="probation_pay_rate"/>
+        <result property="incomeType" column="income_type"/>
+        <result property="wageContractStart" column="wage_contract_start"/>
+        <result property="wageContractEnd" column="wage_contract_end"/>
+        <result property="monthlySalary" column="monthly_salary"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <sql id="employeeColumns">
+        e.emp_no, e.login_username, e.name, e.employment_type, e.employment_status, e.four_insured, e.tax_scheme, e.contract_end_date,
+        e.hire_date, e.group_hire_date, e.position_name,
+        (
+            SELECT ou.name
+            FROM employee_org_assignments eoa
+            LEFT JOIN org_units ou ON ou.id = eoa.org_unit_id
+            WHERE eoa.emp_no = e.emp_no
+            ORDER BY eoa.sort_order ASC, eoa.id ASC
+            LIMIT 1
+        ) AS department_name,
+        e.job_names, e.identification_number, e.age, e.years_of_service, e.email, e.birth_date, e.termination_date, e.hr_memo,
+        e.name_en, e.gender, e.nationality, e.phone, e.bank_name, e.bank_account, e.bank_holder,
+        e.labor_contract_start, e.labor_contract_end, e.probation_start, e.probation_end, e.probation_pay_rate,
+        e.income_type, e.wage_contract_start, e.wage_contract_end, e.monthly_salary,
+        e.created_at
+    </sql>
+
+    <sql id="userColumnsAliased">
+        u.username AS u_username,
+        u.pwd AS u_pwd,
+        u.role AS u_role,
+        u.enabled AS u_enabled,
+        u.created_at AS u_created_at,
+        u.employee_no AS u_employee_no
+    </sql>
+
+    <select id="selectByEmpNo" resultMap="EmployeeOnlyResultMap">
+        SELECT <include refid="employeeColumns"/>
+        FROM employees e
+        WHERE e.emp_no = #{empNo}
+    </select>
+
+    <select id="selectWithUserByEmpNo" resultMap="EmployeeWithUserResultMap">
+        SELECT
+          <include refid="employeeColumns"/>,
+          <include refid="userColumnsAliased"/>
+        FROM employees e
+        LEFT JOIN users u ON u.employee_no = e.emp_no
+        WHERE e.emp_no = #{empNo}
+    </select>
+
+    <select id="selectAllWithUser" resultMap="EmployeeWithUserResultMap">
+        SELECT
+          <include refid="employeeColumns"/>,
+          <include refid="userColumnsAliased"/>
+        FROM employees e
+        LEFT JOIN users u ON u.employee_no = e.emp_no
+        ORDER BY e.created_at DESC
+    </select>
+
+    <select id="selectByEmploymentTypeWithUser" resultMap="EmployeeWithUserResultMap">
+        SELECT
+          <include refid="employeeColumns"/>,
+          <include refid="userColumnsAliased"/>
+        FROM employees e
+        LEFT JOIN users u ON u.employee_no = e.emp_no
+        WHERE e.employment_type = #{employmentType}
+        ORDER BY e.created_at DESC
+    </select>
+
+    <select id="selectByFiltersWithUser" resultMap="EmployeeWithUserResultMap">
+        SELECT
+          <include refid="employeeColumns"/>,
+          <include refid="userColumnsAliased"/>
+        FROM employees e
+        LEFT JOIN users u ON u.employee_no = e.emp_no
+        WHERE 1 = 1
+        <if test="employmentType != null and employmentType != ''">
+            AND e.employment_type = #{employmentType}
+        </if>
+        <if test="employmentStatus != null and employmentStatus != ''">
+            <choose>
+                <when test="employmentStatus == 'ACTIVE'">
+                    AND (e.employment_status = #{employmentStatus} OR e.employment_status IS NULL)
+                </when>
+                <otherwise>
+                    AND e.employment_status = #{employmentStatus}
+                </otherwise>
+            </choose>
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (
+                e.emp_no LIKE CONCAT('%', #{keyword}, '%')
+                OR e.name LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+        <choose>
+            <when test="sort == 'hireDateDesc'">
+                ORDER BY COALESCE(e.hire_date, DATE('1900-01-01')) DESC, e.created_at DESC
+            </when>
+            <when test="sort == 'hireDateAsc'">
+                ORDER BY COALESCE(e.hire_date, DATE('2999-12-31')) ASC, e.created_at DESC
+            </when>
+            <when test="sort == 'nameAsc'">
+                ORDER BY e.name ASC, e.created_at DESC
+            </when>
+            <when test="sort == 'empNoAsc'">
+                ORDER BY e.emp_no ASC
+            </when>
+            <otherwise>
+                ORDER BY e.created_at DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(1) FROM employees
+    </select>
+
+    <select id="countByEmploymentType" resultType="long">
+        SELECT COUNT(1) FROM employees WHERE employment_type = #{employmentType}
+    </select>
+
+    <select id="countByEmploymentStatus" resultType="long">
+        SELECT COUNT(1)
+        FROM employees
+        <choose>
+            <when test="employmentStatus == 'ACTIVE'">
+                WHERE employment_status = #{employmentStatus} OR employment_status IS NULL
+            </when>
+            <otherwise>
+                WHERE employment_status = #{employmentStatus}
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="existsByEmpNo" resultType="int">
+        SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END
+        FROM employees
+        WHERE emp_no = #{empNo}
+    </select>
+
+    <select id="existsByLoginUsername" resultType="int">
+        SELECT CASE WHEN COUNT(1) > 0 THEN 1 ELSE 0 END
+        FROM employees
+        WHERE login_username = #{loginUsername}
+    </select>
+
+    <insert id="insert" parameterType="com.example.sayy.Entity.EmployeeEntity">
+        INSERT INTO employees (
+            emp_no, login_username, name, employment_type, employment_status, four_insured, tax_scheme, contract_end_date,
+            hire_date, group_hire_date, position_name, job_names,
+            identification_number, age, years_of_service, email, birth_date, termination_date, hr_memo
+        )
+        VALUES (
+            #{empNo}, #{loginUsername}, #{name}, #{employmentType}, #{employmentStatus}, #{fourInsured}, #{taxScheme}, #{contractEndDate},
+            #{hireDate}, #{groupHireDate}, #{positionName}, #{jobNames},
+            #{identificationNumber}, #{age}, #{yearsOfService}, #{email}, #{birthDate}, #{terminationDate}, #{hrMemo}
+        )
+    </insert>
+
+    <delete id="deleteByEmpNo">
+        DELETE FROM employees WHERE emp_no = #{empNo}
+    </delete>
+
+    <update id="updateHrInfo" parameterType="com.example.sayy.Entity.EmployeeEntity">
+        UPDATE employees
+        SET
+            hire_date = #{hireDate},
+            group_hire_date = #{groupHireDate},
+            position_name = #{positionName},
+            job_names = #{jobNames},
+            hr_memo = #{hrMemo}
+        WHERE emp_no = #{empNo}
+    </update>
+
+    <update id="updateContractInfo" parameterType="com.example.sayy.Entity.EmployeeEntity">
+        UPDATE employees
+        SET
+            labor_contract_start = #{laborContractStart},
+            labor_contract_end   = #{laborContractEnd},
+            probation_start      = #{probationStart},
+            probation_end        = #{probationEnd},
+            probation_pay_rate   = #{probationPayRate},
+            income_type          = #{incomeType},
+            wage_contract_start  = #{wageContractStart},
+            wage_contract_end    = #{wageContractEnd},
+            monthly_salary       = #{monthlySalary}
+        WHERE emp_no = #{empNo}
+    </update>
+
+    <update id="updatePersonalInfo" parameterType="com.example.sayy.Entity.EmployeeEntity">
+        UPDATE employees
+        SET
+            name_en      = #{nameEn},
+            gender       = #{gender},
+            nationality  = #{nationality},
+            phone        = #{phone},
+            bank_name    = #{bankName},
+            bank_account = #{bankAccount},
+            bank_holder  = #{bankHolder}
+        WHERE emp_no = #{empNo}
+    </update>
+
+</mapper>
+

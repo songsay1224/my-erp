@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/admin-shell :: layout('구성원 엑셀 업로드', 'members', ~{::section})}">
+<section>
+    <div th:replace="~{fragments/employee-menu :: menu('import')}"></div>
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div class="text-secondary small">
+            템플릿 엑셀(.xlsx) 또는 기존 구성원 CSV(.csv)를 업로드하면 인사정보(`employees`)가 등록됩니다.
+            계정/초기 비밀번호 발급은 구성원 목록에서 진행하세요.
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-outline-secondary" href="/admin/employees">목록으로</a>
+            <a class="btn btn-sm btn-outline-dark" href="/admin/employees/import/template">템플릿 다운로드</a>
+        </div>
+    </div>
+
+    <div class="alert alert-danger py-2" th:if="${error}" th:text="${error}"></div>
+
+    <div class="app-setting-card">
+        <div class="card-body">
+            <div class="fw-bold mb-2">1) 파일 업로드</div>
+            <form th:action="@{/admin/employees/import/preview}" method="post" enctype="multipart/form-data" class="row g-2">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div class="col-12 col-md-8">
+                    <input class="form-control" type="file" name="file" accept=".xlsx,.csv" required>
+                    <div class="text-secondary small mt-1">
+                        `xlsx` 템플릿 필수 컬럼: <span class="fw-semibold">emp_no, name, employment_type</span>
+                        / `csv` 기존 파일 헤더 예: <span class="fw-semibold">Employee Number, Employee Name, 상태, Title, Start date, Identification Number</span>
+                        <span class="text-secondary"> / 입사일로 근속년수, 주민등록번호로 생일/나이가 자동 반영됩니다. username은 선택입니다.</span>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4 d-grid">
+                    <button class="btn btn-dark" type="submit">미리보기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div th:if="${previewRows != null}" class="mt-3">
+        <div class="app-setting-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                    <div>
+                        <div class="fw-bold">2) 미리보기/검증 결과</div>
+                        <div class="text-secondary small">
+                            전체 <span class="fw-semibold" th:text="${previewTotal}">0</span>건 ·
+                            정상 <span class="fw-semibold text-success" th:text="${previewValid}">0</span>건 ·
+                            오류 <span class="fw-semibold text-danger" th:text="${previewInvalid}">0</span>건
+                        </div>
+                    </div>
+                    <form th:action="@{/admin/employees/import/commit}" method="post" class="m-0">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <input type="hidden" name="token" th:value="${previewToken}"/>
+                        <button class="btn btn-sm btn-primary" type="submit"
+                                th:disabled="${previewCanCommit != true}"
+                                th:title="${previewCanCommit == true ? '반영' : '오류를 먼저 수정하세요'}">
+                            반영(Import)
+                        </button>
+                    </form>
+                </div>
+
+                <div class="alert alert-warning py-2" th:if="${previewInvalid != null and previewInvalid > 0}">
+                    오류가 있는 행이 있어 반영할 수 없습니다. 엑셀을 수정한 뒤 다시 업로드하세요.
+                    (정책: <span class="fw-semibold">emp_no 중복은 에러</span>, <span class="fw-semibold">입사일 필수</span>)
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0 app-table">
+                        <thead>
+                        <tr class="text-secondary">
+                            <th style="width: 70px;">행</th>
+                            <th style="width: 140px;">사번(emp_no)</th>
+                            <th style="width: 140px;">이름</th>
+                            <th style="width: 100px;">상태</th>
+                            <th style="width: 120px;">고용형태</th>
+                            <th style="width: 130px;">입사일</th>
+                            <th style="width: 90px;">근속년수</th>
+                            <th style="width: 120px;">생일</th>
+                            <th style="width: 70px;">나이</th>
+                            <th style="width: 120px;">직위</th>
+                            <th style="width: 120px;">username</th>
+                            <th>오류</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="r : ${previewRows}">
+                            <td th:text="${r.rowNum}">2</td>
+                            <td class="fw-semibold" th:text="${r.empNo}">20260001</td>
+                            <td th:text="${r.name}">홍길동</td>
+                            <td><span class="badge text-bg-light" th:text="${r.employmentStatus}">ACTIVE</span></td>
+                            <td><span class="badge text-bg-secondary" th:text="${r.employmentType}">REGULAR</span></td>
+                            <td th:text="${r.hireDate}">2026-03-25</td>
+                            <td th:text="${r.yearsOfService}">0</td>
+                            <td th:text="${r.birthDate}">1996-01-01</td>
+                            <td th:text="${r.age}">30</td>
+                            <td th:text="${r.positionName}">대리</td>
+                            <td th:text="${r.username}">honggildong</td>
+                            <td>
+                                <span th:if="${r.valid}" class="badge text-bg-success">OK</span>
+                                <div th:if="${!r.valid}" class="text-danger small">
+                                    <div th:each="e : ${r.errors}" th:text="${e}">error</div>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</html>
+

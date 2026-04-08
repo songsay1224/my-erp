@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/admin-shell :: layout('구성원', 'members', ~{::section})}">
+<section>
+    <div th:replace="~{fragments/employee-menu :: menu('list')}"></div>
+
+    <div class="text-secondary small mb-3">
+        구성원 / <span class="fw-semibold" th:text="${employee.name}">이름</span>
+    </div>
+
+    <div class="app-profile-head">
+        <div class="app-profile-avatar" aria-hidden="true">
+            <span th:text="${employee.name != null and !employee.name.isBlank() ? employee.name.substring(0, 1) : 'P'}">P</span>
+        </div>
+        <div class="app-profile-main">
+            <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="app-profile-name" th:text="${employee.name}">이름</div>
+                        <span class="badge"
+                              th:classappend="${
+                                  employee.employmentStatus == T(com.example.sayy.Entity.EmploymentStatus).ACTIVE ? ' app-badge-active' :
+                                  (employee.employmentStatus == T(com.example.sayy.Entity.EmploymentStatus).LEAVE ? ' app-badge-leave' : ' app-badge-terminated')
+                              }"
+                              th:text="${employee.employmentStatus != null ? employee.employmentStatus.label : '재직'}">재직</span>
+                    </div>
+                    <div class="app-profile-meta">
+                        <div>조직 <span class="text-secondary ms-2" th:text="${employee.departmentName != null ? employee.departmentName : '-'}">-</span></div>
+                        <div class="ms-3">직무 <span class="text-secondary ms-2" th:text="${employee.jobNames != null ? employee.jobNames : '-'}">-</span></div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="vr"></div>
+                    <a class="btn btn-sm btn-outline-secondary" th:href="@{|/admin/employees/${employee.empNo}/contract|}">
+                        <i class="bi bi-x-lg"></i> 취소
+                    </a>
+                </div>
+            </div>
+
+            <ul class="nav app-profile-tabs mt-3">
+                <li class="nav-item"><a class="nav-link" th:href="@{|/admin/employees/${employee.empNo}|}">인사 정보</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{|/admin/employees/${employee.empNo}/personal|}">개인 정보</a></li>
+                <li class="nav-item"><a class="nav-link active" th:href="@{|/admin/employees/${employee.empNo}/contract|}">계약정보</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{|/admin/employees/${employee.empNo}/career|}">경력·학력</a></li>
+               <!-- <li class="nav-item"><a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">인사노트</a></li>-->
+                <li class="nav-item"><a class="nav-link" th:href="@{|/admin/employees/${employee.empNo}/documents|}">문서</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="app-profile-section">
+        <form th:action="@{|/admin/employees/${employee.empNo}/contract|}" method="post">
+
+            <!-- 근로계약 -->
+            <div class="app-profile-card">
+                <div class="app-profile-card-head">
+                    <div class="fw-bold">근로계약</div>
+                </div>
+                <div class="app-profile-card-body">
+                    <div class="row g-3">
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">근로 유형</label>
+                            <div class="form-control-plaintext text-secondary"
+                                 th:text="${employee.employmentType != null ? employee.employmentType.label : '-'}">-</div>
+                        </div>
+
+                        <div class="col-12 col-md-6"></div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">근로계약 시작일</label>
+                            <input type="date" class="form-control" name="laborContractStart"
+                                   th:value="${employee.laborContractStart}">
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">근로계약 종료일</label>
+                            <input type="date" class="form-control" name="laborContractEnd"
+                                   th:value="${employee.laborContractEnd}"
+                                   placeholder="정규직은 비워두세요">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">수습기간</label>
+                            <div class="d-flex gap-2 flex-wrap align-items-center">
+                                <input type="date" class="form-control w-auto" name="probationStart"
+                                       th:value="${employee.probationStart}" placeholder="시작일">
+                                <span class="text-secondary">~</span>
+                                <input type="date" class="form-control w-auto" name="probationEnd"
+                                       th:value="${employee.probationEnd}" placeholder="종료일">
+                                <div class="input-group w-auto">
+                                    <input type="number" class="form-control" name="probationPayRate"
+                                           th:value="${employee.probationPayRate}"
+                                           min="0" max="100" placeholder="급여지급률">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                            <div class="form-text">수습기간이 없으면 비워두세요.</div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- 임금계약 -->
+            <div class="app-profile-card mt-3">
+                <div class="app-profile-card-head">
+                    <div class="fw-bold">임금계약</div>
+                </div>
+                <div class="app-profile-card-body">
+                    <div class="row g-3">
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">소득 구분</label>
+                            <select class="form-select" name="incomeType">
+                                <option value="">선택</option>
+                                <option value="근로소득"
+                                        th:selected="${employee.incomeType == '근로소득'}">근로소득</option>
+                                <option value="사업소득"
+                                        th:selected="${employee.incomeType == '사업소득'}">사업소득</option>
+                                <option value="기타소득"
+                                        th:selected="${employee.incomeType == '기타소득'}">기타소득</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">월 기본급</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="monthlySalary"
+                                       th:value="${employee.monthlySalary}"
+                                       min="0" step="10000" placeholder="0">
+                                <span class="input-group-text">원</span>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">임금계약 시작일</label>
+                            <input type="date" class="form-control" name="wageContractStart"
+                                   th:value="${employee.wageContractStart}">
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label">임금계약 종료일</label>
+                            <input type="date" class="form-control" name="wageContractEnd"
+                                   th:value="${employee.wageContractEnd}">
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-3">
+                <a class="btn btn-outline-secondary" th:href="@{|/admin/employees/${employee.empNo}/contract|}">취소</a>
+                <button type="submit" class="btn btn-primary">저장</button>
+            </div>
+
+        </form>
+    </div>
+</section>
+</html>

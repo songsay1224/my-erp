@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/admin-shell :: layout('회사 정보', 'company', ~{::section})}">
+<section>
+    <div class="row g-3">
+        <div class="col-12 col-lg-4">
+            <div class="app-setting-card">
+                <div class="card-body">
+                    <div class="fw-bold mb-2">회사 로고</div>
+                    <div class="d-flex justify-content-center my-3">
+                        <img th:if="${company != null && company.logoPath != null}"
+                             th:src="${company.logoPath}"
+                             alt="Company Logo"
+                             style="width: 320px; height: 140px; object-fit: contain; border-radius: 22px; border: 1px solid rgba(17,24,39,0.12); background: #fff; padding: 12px;">
+                        <div th:if="${company == null || company.logoPath == null}"
+                             style="width: 320px; height: 140px; border-radius: 22px; border: 1px dashed rgba(17,24,39,0.18); display:grid; place-items:center; color:#6b7280; background:#fff;">
+                            로고 없음
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <a class="btn btn-outline-dark" th:href="@{/admin/settings(drawer='company')}">회사 정보 수정</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-8">
+            <div class="app-setting-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap mb-2">
+                        <div>
+                            <div class="fw-bold">기본 정보</div>
+                            <div class="text-secondary small">등록된 회사 정보를 조회합니다.</div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a class="btn btn-sm btn-outline-secondary" th:href="@{/admin/settings(drawer='company-seal')}">직인 설정</a>
+                            <a class="btn btn-sm btn-outline-dark" th:href="@{/admin/settings(drawer='company')}">수정</a>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mt-1">
+                        <div class="col-12 col-md-6">
+                            <div class="text-secondary small mb-1">회사명</div>
+                            <div class="fw-semibold" th:text="${company.companyName != null ? company.companyName : '-'}">-</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="text-secondary small mb-1">대표자</div>
+                            <div class="fw-semibold" th:text="${company.ceoName != null ? company.ceoName : '-'}">-</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="text-secondary small mb-1">전화번호</div>
+                            <div class="fw-semibold" th:text="${company.phone != null ? company.phone : '-'}">-</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="text-secondary small mb-1">설립일</div>
+                            <div class="fw-semibold" th:text="${company.foundedDate != null ? company.foundedDate : '-'}">-</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="text-secondary small mb-1">주소</div>
+                            <div class="fw-semibold">
+                                <span th:text="${company.zipCode != null ? company.zipCode : ''}"></span>
+                                <span th:if="${company.zipCode != null}" class="text-secondary small ms-1">|</span>
+                                <span th:text="${company.address != null ? company.address : '-'}">-</span>
+                                <span th:if="${company.addressDetail != null}" class="text-secondary ms-1" th:text="${company.addressDetail}"></span>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="text-secondary small mb-1">사업자등록번호</div>
+                            <div class="fw-semibold"
+                                 th:text="${company.businessRegNo != null and #strings.length(company.businessRegNo)==10
+                                 ? (#strings.substring(company.businessRegNo,0,3) + '-' + #strings.substring(company.businessRegNo,3,5) + '-' + #strings.substring(company.businessRegNo,5,10))
+                                 : (company.businessRegNo != null ? company.businessRegNo : '-') }">-</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="text-secondary small mb-1">법인등록번호</div>
+                            <div class="fw-semibold"
+                                 th:text="${company.corporateRegNo != null and #strings.length(company.corporateRegNo)==13
+                                 ? (#strings.substring(company.corporateRegNo,0,6) + '-' + #strings.substring(company.corporateRegNo,6,13))
+                                 : (company.corporateRegNo != null ? company.corporateRegNo : '-') }">-</div>
+                        </div>
+
+                        <div class="col-12 mt-2">
+                            <div class="text-secondary small mb-1">직인</div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <img th:if="${company.sealPath != null}"
+                                     th:src="${company.sealPath}"
+                                     alt="Company Seal"
+                                     style="width: 86px; height: 86px; object-fit: contain; border-radius: 18px; border: 1px solid rgba(17,24,39,0.12); background: #fff; padding: 8px;">
+                                <span class="text-secondary small" th:if="${company.sealPath == null}">등록된 직인이 없습니다.</span>
+                                <a class="btn btn-sm btn-outline-secondary" th:href="@{/admin/settings(drawer='company-seal')}">직인 수정</a>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt-2 text-secondary small">
+                            마지막 업데이트:
+                            <span th:text="${company.updatedAt != null ? company.updatedAt : '-'}">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</html>
+

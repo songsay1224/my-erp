@@ -1,0 +1,201 @@
+## 발표자료용 흐름 정리 (MVC 패턴 기준)
+
+이 문서는 현재 프로젝트의 주요 기능을 **발표 슬라이드에 바로 옮기기 쉬운 포맷**으로 정리한 자료입니다.
+
+---
+
+### 1) 루트 진입/분기 (`GET /`)
+- **목적**: 로그인 상태/권한에 따라 적절한 시작 화면으로 안내
+- **MVC 흐름**
+  - **View**: 없음(리다이렉트만 수행)
+  - **Controller**: `UserController.root(Authentication)`
+  - **Model(Service)**: 없음
+  - **Persistence/DB**: 없음
+- **예외/정책**
+  - 미로그인 → `/login`
+  - 관리자(ROLE_ADMIN) → `/admin/home`
+  - 일반 사용자 → `/user`
+
+---
+
+### 2) 로그인 화면 (`GET /login`)
+- **목적**: 인증을 위한 로그인 폼 제공
+- **MVC 흐름**
+  - **View**: `login.html`
+  - **Controller**: `UserController.loginForm()`
+  - **Model(Service)**: 없음
+  - **Persistence/DB**: 없음
+- **예외/정책**
+  - 로그인 실패 시 `?error=true`로 메시지 노출
+
+---
+
+### 3) 로그인 처리 (`POST /login`, Spring Security)
+- **목적**: DB 계정으로 인증(비밀번호 BCrypt 검증)
+- **MVC 흐름**
+  - **View**: `login.html` 폼 submit
+  - **Controller**: 없음(시큐리티 필터가 처리)
+  - **Model(Service)**: `DbUserDetailsService.loadUserByUsername`
+  - **Persistence(MyBatis)**: `UserMapper.selectByUsername`
+  - **DB**: `users` 조회
+- **예외/정책**
+  - 실패 → `/login?error=true`
+  - 성공 → `/` 이동(루트 분기 재적용)
+
+---
+
+### 4) 관리자 시드 계정 생성(부팅 시, 1회)
+- **목적**: 별도 회원가입 없이 관리자 1계정으로 시스템 초기 접근 보장
+- **MVC 흐름**
+  - **View/Controller**: 없음(부팅 이벤트)
+  - **Model(Service)**: `AdminAccountInitializer` → `UserService.createAdminIfMissing`
+  - **Persistence(MyBatis)**: `UserMapper.existsByUsername` → `UserMapper.insert`
+  - **DB**: `users`에 admin 없으면 INSERT
+- **예외/정책**
+  - 이미 DB에 admin이 있으면 비밀번호를 덮어쓰지 않음(“없으면 생성” 정책)
+  - 초기 값은 `application.properties`의 `app.admin.*`
+
+---
+
+### 5) 관리자 홈 (`GET /admin/home`)
+- **목적**: 관리자 업무 시작점(구성원 등록/목록/설정으로 진입)
+- **MVC 흐름**
+  - **View**: `admin-home.html` (공통 레이아웃: `fragments/admin-shell.html`)
+  - **Controller**: `AdminController.adminHome()`
+  - **Model/Persistence/DB**: 없음
+- **예외/정책**
+  - `/admin/**`는 ROLE_ADMIN만 접근 가능
+
+---
+
+### 6) 설정 화면 (`GET /admin/settings`)
+- **목적**: 설정 허브(향후 모듈 확장 포인트 포함)
+- **MVC 흐름**
+  - **View**: `admin-dashboard.html`
+  - **Controller**: `AdminController.adminSettings()`
+  - **Model/Persistence/DB**: 없음(현재는 링크 중심)
+- **예외/정책**
+  - 설정 카드에서 구성원 목록/등록으로 이동
+
+---
+
+### 7) 구성원 목록 + 탭 필터 (`GET /admin/employees?type=...`)
+- **목적**: 구성원(인사정보) 조회 및 고용형태별 빠른 분류
+- **MVC 흐름**
+  - **View**: `admin-employees.html` (탭: 전체/정규직/계약직/프리랜서)
+  - **Controller**: `AdminController.employeeList(type, model)`
+  - **Model(Service)**: `EmployeeService.countAll/countByEmploymentType/findAll/findByEmploymentType`
+  - **Persistence(MyBatis)**: `EmployeeMapper.count*`, `EmployeeMapper.select*WithUser`
+  - **DB**: `employees` + `users` LEFT JOIN
+- **예외/정책**
+  - 계정 발급/계정 포함 삭제 버튼은 **정규직만 노출**
+  - 목록은 “계정 발급 여부(user join)”까지 함께 보여줌
+
+---
+
+### 8) 구성원 등록 화면 (`GET /admin/employees/new`)
+- **목적**: 인사정보 등록(고용형태 기반 동적 입력 UX)
+- **MVC 흐름**
+  - **View**: `admin-employees-new.html`
+  - **Controller**: `AdminController.employeeNew()`
+  - **Model/Persistence/DB**: 없음(폼 렌더링)
+- **예외/정책**
+  - 고용형태 선택에 따라 입력 항목이 즉시 변경(프론트 JS)
+  - 사번은 숫자 입력만 허용(UI 패턴)
+
+---
+
+### 9) 구성원 등록 저장 (`POST /admin/employees`)
+- **목적**: 인사정보 저장 + 고용형태별 보험/세금/계약 종료일 정책을 서버에서 강제
+- **MVC 흐름**
+  - **View**: `admin-employees-new.html` 폼 submit
+  - **Controller**: `AdminController.createEmployee(...)` → 성공/실패 flash → 등록 화면 리다이렉트
+  - **Model(Service)**: `EmployeeService.create(...)` (검증/정책 강제)
+  - **Persistence(MyBatis)**: `EmployeeMapper.existsByEmpNo` → `EmployeeMapper.insert`
+  - **DB**: `employees` INSERT
+- **예외/정책**
+  - **사번 숫자만** + **중복 불가(PK/exists 체크)**
+  - 계약직/프리랜서: **계약 종료일 필수**
+  - 프리랜서: 4대보험 false 고정, 세금 3.3% 고정(현재 MVP)
+
+---
+
+### 10) 계정/초기비번 발급(정규직만) (`POST /admin/employees/{empNo}/issue-account`)
+- **목적**: 인사정보 기반 계정 발급 및 초기 비밀번호 1회 제공
+- **MVC 흐름**
+  - **View**: `admin-employees.html` 버튼 클릭
+  - **Controller**: `AdminController.issueAccount(...)` → 발급 정보 flash → 목록 리다이렉트
+  - **Model(Service)**: `UserService.issueAccountForEmployee(empNo)`
+  - **Persistence(MyBatis)**:
+    - `EmployeeMapper.selectWithUserByEmpNo`(발급 여부 확인)
+    - `UserMapper.existsByUsername`
+    - `UserMapper.insert`
+  - **DB**: `users` INSERT (employee_no FK 연결)
+- **예외/정책**
+  - **정규직만 발급 가능**(서버에서 강제)
+  - 초기 비밀번호는 화면에서 **1회만 표시**
+  - 사번 = username(로그인 ID)
+
+---
+
+### 11) 인사정보 삭제(미발급) (`POST /admin/employees/{empNo}/delete`)
+- **목적**: 계정이 없는 인사정보를 정리(삭제)
+- **MVC 흐름**
+  - **View**: `admin-employees.html` 삭제 버튼
+  - **Controller**: `AdminController.deleteEmployee(...)` → 목록 리다이렉트
+  - **Model(Service)**: `EmployeeService.deleteEmployee(empNo, false)`
+  - **Persistence(MyBatis)**: `EmployeeMapper.selectWithUserByEmpNo` → `EmployeeMapper.deleteByEmpNo`
+  - **DB**: `employees` DELETE
+- **예외/정책**
+  - 계정이 발급된 경우: “계정 포함 삭제”를 요구(예외 발생)
+
+---
+
+### 12) 계정+인사정보 삭제(정규직만) (`POST /admin/employees/{empNo}/delete-with-account`)
+- **목적**: 계정까지 포함하여 구성원 데이터를 정리(삭제)
+- **MVC 흐름**
+  - **View**: `admin-employees.html` “계정+인사정보 삭제” 버튼
+  - **Controller**: `AdminController.deleteEmployeeWithAccount(...)` → 목록 리다이렉트
+  - **Model(Service)**: `EmployeeService.deleteEmployee(empNo, true)`
+  - **Persistence(MyBatis)**:
+    - `EmployeeMapper.selectWithUserByEmpNo`
+    - `UserMapper.deleteByUsername`(FK 때문에 먼저 삭제)
+    - `EmployeeMapper.deleteByEmpNo`
+  - **DB**: `users` DELETE → `employees` DELETE
+- **예외/정책**
+  - **정규직만 계정 포함 삭제 가능**
+  - FK(users.employee_no → employees.emp_no) 때문에 삭제 순서 고정
+
+---
+
+### 13) 로그아웃 (`POST /logout`, Spring Security)
+- **목적**: 인증 세션 종료
+- **MVC 흐름**
+  - **View**: 상단바 로그아웃 폼(`admin-shell`) submit
+  - **Controller**: 없음(시큐리티 처리)
+  - **Model/Persistence/DB**: 없음
+- **예외/정책**
+  - 로그아웃 후 `/login?logout=true`
+
+---
+
+### 14) 일반 사용자 홈(현재 MVP) (`GET /user`)
+- **목적**: 일반 사용자 진입점(현재는 안내 화면)
+- **MVC 흐름**
+  - **View**: `user-dashboard.html`
+  - **Controller**: `UserController.userHome()`
+  - **Model/Persistence/DB**: 없음
+- **예외/정책**
+  - 후속으로 사용자 기능 확장 예정
+
+---
+
+### 15) 개발용 DB 스키마 초기화(`schema.sql`)
+- **목적**: JPA ddl-auto 없이도 개발 환경에서 테이블 자동 준비
+- **MVC 흐름**
+  - **View/Controller/Service**: 없음
+  - **DB Init**: Spring SQL init이 `schema.sql` 실행
+  - **DB**: `CREATE TABLE IF NOT EXISTS ...`
+- **예외/정책**
+  - 운영에서는 Flyway/Liquibase 등 마이그레이션 권장
+

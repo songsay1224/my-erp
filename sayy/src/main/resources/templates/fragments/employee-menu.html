@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="menu(active)">
+    <div class="d-flex gap-2 flex-wrap mb-3">
+        <a class="btn btn-sm"
+           th:classappend="${active}=='list' ? ' btn-dark' : ' btn-outline-dark'"
+           href="/admin/employees">구성원 목록</a>
+        <a class="btn btn-sm"
+           th:classappend="${active}=='new' ? ' btn-dark' : ' btn-outline-dark'"
+           href="/admin/employees/new">구성원 등록</a>
+        <a class="btn btn-sm"
+           th:classappend="${active}=='import' ? ' btn-dark' : ' btn-outline-primary'"
+           href="/admin/employees/import">엑셀 업로드</a>
+    </div>
+</th:block>
+</html>
+

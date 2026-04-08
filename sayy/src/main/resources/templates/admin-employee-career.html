@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/admin-shell :: layout('구성원', 'members', ~{::section})}">
+<section>
+    <div th:replace="~{fragments/employee-menu :: menu('list')}"></div>
+
+    <div class="text-secondary small mb-3">
+        구성원 / <span class="fw-semibold" th:text="${employee.name}">이름</span>
+    </div>
+
+    <div class="app-profile-head">
+        <div class="app-profile-avatar" aria-hidden="true">
+            <span th:text="${employee.name != null and !employee.name.isBlank() ? employee.name.substring(0, 1) : 'P'}">P</span>
+        </div>
+        <div class="app-profile-main">
+            <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <div class="app-profile-name" th:text="${employee.name}">이름</div>
+                        <span class="badge"
+                              th:classappend="${
+                                  employee.employmentStatus == T(com.example.sayy.Entity.EmploymentStatus).ACTIVE ? ' app-badge-active' :
+                                  (employee.employmentStatus == T(com.example.sayy.Entity.EmploymentStatus).LEAVE ? ' app-badge-leave' : ' app-badge-terminated')
+                              }"
+                              th:text="${employee.employmentStatus != null ? employee.employmentStatus.label : '재직'}">재직</span>
+                    </div>
+                    <div class="app-profile-meta">
+                        <div>조직 <span class="text-secondary ms-2" th:text="${employee.departmentName != null ? employee.departmentName : '-'}">-</span></div>
+                        <div class="ms-3">직무 <span class="text-secondary ms-2" th:text="${employee.jobNames != null ? employee.jobNames : '-'}">-</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <ul class="nav app-profile-tabs mt-3">
+                <li class="nav-item"><a class="nav-link" th:href="@{|/admin/employees/${employee.empNo}|}">인사 정보</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{|/admin/employees/${employee.empNo}/personal|}">개인 정보</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{|/admin/employees/${employee.empNo}/contract|}">계약정보</a></li>
+                <li class="nav-item"><a class="nav-link active" th:href="@{|/admin/employees/${employee.empNo}/career|}">경력·학력</a></li>
+<!--                <li class="nav-item"><a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">인사노트</a></li>-->
+                <li class="nav-item"><a class="nav-link" th:href="@{|/admin/employees/${employee.empNo}/documents|}">문서</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="alert alert-success py-2" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-danger py-2" th:if="${error}" th:text="${error}"></div>
+
+    <div class="app-profile-section">
+
+        <!-- 경력 -->
+        <div class="app-profile-card">
+            <div class="app-profile-card-head">
+                <div class="fw-bold">경력</div>
+                <button class="btn btn-sm btn-outline-dark" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#careerAddForm">
+                    <i class="bi bi-plus-lg"></i> 추가
+                </button>
+            </div>
+
+            <div class="collapse" id="careerAddForm">
+                <div class="p-3 border-bottom bg-light">
+                    <form th:action="@{|/admin/employees/${employee.empNo}/career/add|}" method="post">
+                        <div class="row g-2">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">회사명 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" name="companyName" required placeholder="(주)회사명">
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">부서</label>
+                                <input type="text" class="form-control form-control-sm" name="department" placeholder="개발팀">
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label">직위/직책</label>
+                                <input type="text" class="form-control form-control-sm" name="position" placeholder="대리">
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="form-label">입사일 <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control form-control-sm" name="startDate" required>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="form-label">퇴사일</label>
+                                <input type="date" class="form-control form-control-sm" name="endDate">
+                                <div class="form-text">비우면 현재 재직</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">업무 내용</label>
+                                <input type="text" class="form-control form-control-sm" name="description" placeholder="담당 업무 요약">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                    data-bs-toggle="collapse" data-bs-target="#careerAddForm">취소</button>
+                            <button type="submit" class="btn btn-sm btn-dark">저장</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="app-profile-card-body p-0">
+                <div th:if="${#lists.isEmpty(careers)}" class="text-secondary small p-3">
+                    등록된 경력이 없습니다.
+                </div>
+                <table class="table table-hover mb-0" th:if="${!#lists.isEmpty(careers)}">
+                    <thead class="table-light">
+                        <tr>
+                            <th>회사명</th>
+                            <th class="d-none d-md-table-cell">부서 / 직위</th>
+                            <th>재직 기간</th>
+                            <th class="d-none d-md-table-cell">업무</th>
+                            <th style="width:60px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="c : ${careers}">
+                            <td class="fw-semibold" th:text="${c.companyName}">-</td>
+                            <td class="d-none d-md-table-cell text-secondary">
+                                <span th:text="${c.department != null ? c.department : ''}">-</span>
+                                <span th:if="${c.position != null}"
+                                      th:text="${(c.department != null ? ' / ' : '') + c.position}"> / 대리</span>
+                            </td>
+                            <td>
+                                <span th:text="${c.startDate}">-</span>
+                                ~
+                                <span th:if="${c.endDate != null}" th:text="${c.endDate}">-</span>
+                                <span th:if="${c.endDate == null}" class="badge text-bg-success">현재</span>
+                            </td>
+                            <td class="d-none d-md-table-cell text-secondary small"
+                                th:text="${c.description != null ? c.description : '-'}">-</td>
+                            <td class="text-end">
+                                <form th:action="@{|/admin/employees/${employee.empNo}/career/${c.id}/delete|}" method="post"
+                                      onsubmit="return confirm('경력을 삭제하시겠습니까?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 학력 -->
+        <div class="app-profile-card mt-3">
+            <div class="app-profile-card-head">
+                <div class="fw-bold">학력</div>
+                <button class="btn btn-sm btn-outline-dark" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#educationAddForm">
+                    <i class="bi bi-plus-lg"></i> 추가
+                </button>
+            </div>
+
+            <div class="collapse" id="educationAddForm">
+                <div class="p-3 border-bottom bg-light">
+                    <form th:action="@{|/admin/employees/${employee.empNo}/education/add|}" method="post">
+                        <div class="row g-2">
+                            <div class="col-12 col-md-5">
+                                <label class="form-label">학교명 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" name="schoolName" required placeholder="한국대학교">
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label">전공</label>
+                                <input type="text" class="form-control form-control-sm" name="major" placeholder="컴퓨터공학과">
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <label class="form-label">학위</label>
+                                <select class="form-select form-select-sm" name="degree">
+                                    <option value="">선택</option>
+                                    <option value="고등학교졸업">고등학교졸업</option>
+                                    <option value="전문학사">전문학사</option>
+                                    <option value="학사">학사</option>
+                                    <option value="석사">석사</option>
+                                    <option value="박사">박사</option>
+                                </select>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="form-label">입학</label>
+                                <input type="date" class="form-control form-control-sm" name="startDate">
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="form-label">졸업(예정)</label>
+                                <input type="date" class="form-control form-control-sm" name="endDate">
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <label class="form-label">졸업 상태</label>
+                                <select class="form-select form-select-sm" name="graduationStatus">
+                                    <option value="">선택</option>
+                                    <option value="졸업">졸업</option>
+                                    <option value="재학">재학</option>
+                                    <option value="중퇴">중퇴</option>
+                                    <option value="휴학">휴학</option>
+                                    <option value="편입">편입</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                    data-bs-toggle="collapse" data-bs-target="#educationAddForm">취소</button>
+                            <button type="submit" class="btn btn-sm btn-dark">저장</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="app-profile-card-body p-0">
+                <div th:if="${#lists.isEmpty(educations)}" class="text-secondary small p-3">
+                    등록된 학력이 없습니다.
+                </div>
+                <table class="table table-hover mb-0" th:if="${!#lists.isEmpty(educations)}">
+                    <thead class="table-light">
+                        <tr>
+                            <th>학교명</th>
+                            <th class="d-none d-md-table-cell">전공</th>
+                            <th>학위</th>
+                            <th class="d-none d-md-table-cell">기간</th>
+                            <th>상태</th>
+                            <th style="width:60px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="e : ${educations}">
+                            <td class="fw-semibold" th:text="${e.schoolName}">-</td>
+                            <td class="d-none d-md-table-cell text-secondary" th:text="${e.major != null ? e.major : '-'}">-</td>
+                            <td>
+                                <span class="badge text-bg-light" th:text="${e.degree != null ? e.degree : '-'}">-</span>
+                            </td>
+                            <td class="d-none d-md-table-cell text-secondary small">
+                                <span th:text="${e.startDate != null ? e.startDate : '-'}">-</span>
+                                <span th:if="${e.startDate != null}"> ~ </span>
+                                <span th:text="${e.endDate != null ? e.endDate : ''}">-</span>
+                            </td>
+                            <td th:text="${e.graduationStatus != null ? e.graduationStatus : '-'}">-</td>
+                            <td class="text-end">
+                                <form th:action="@{|/admin/employees/${employee.empNo}/education/${e.id}/delete|}" method="post"
+                                      onsubmit="return confirm('학력을 삭제하시겠습니까?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 자격증 -->
+        <div class="app-profile-card mt-3">
+            <div class="app-profile-card-head">
+                <div class="fw-bold">자격증</div>
+                <button class="btn btn-sm btn-outline-dark" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#certAddForm">
+                    <i class="bi bi-plus-lg"></i> 추가
+                </button>
+            </div>
+
+            <div class="collapse" id="certAddForm">
+                <div class="p-3 border-bottom bg-light">
+                    <form th:action="@{|/admin/employees/${employee.empNo}/certificate/add|}" method="post">
+                        <div class="row g-2">
+                            <div class="col-12 col-md-5">
+                                <label class="form-label">자격증명 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" name="certName" required placeholder="정보처리기사">
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label">발급기관</label>
+                                <input type="text" class="form-control form-control-sm" name="issuer" placeholder="한국산업인력공단">
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="form-label">취득일</label>
+                                <input type="date" class="form-control form-control-sm" name="acquiredDate">
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="form-label">만료일</label>
+                                <input type="date" class="form-control form-control-sm" name="expiryDate">
+                                <div class="form-text">영구자격증은 비워두세요.</div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                    data-bs-toggle="collapse" data-bs-target="#certAddForm">취소</button>
+                            <button type="submit" class="btn btn-sm btn-dark">저장</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="app-profile-card-body p-0">
+                <div th:if="${#lists.isEmpty(certificates)}" class="text-secondary small p-3">
+                    등록된 자격증이 없습니다.
+                </div>
+                <table class="table table-hover mb-0" th:if="${!#lists.isEmpty(certificates)}">
+                    <thead class="table-light">
+                        <tr>
+                            <th>자격증명</th>
+                            <th class="d-none d-md-table-cell">발급기관</th>
+                            <th>취득일</th>
+                            <th class="d-none d-md-table-cell">만료일</th>
+                            <th style="width:60px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="cert : ${certificates}">
+                            <td class="fw-semibold" th:text="${cert.certName}">-</td>
+                            <td class="d-none d-md-table-cell text-secondary"
+                                th:text="${cert.issuer != null ? cert.issuer : '-'}">-</td>
+                            <td th:text="${cert.acquiredDate != null ? cert.acquiredDate : '-'}">-</td>
+                            <td class="d-none d-md-table-cell">
+                                <span th:if="${cert.expiryDate != null}" th:text="${cert.expiryDate}">-</span>
+                                <span th:if="${cert.expiryDate == null}" class="badge text-bg-light">영구</span>
+                            </td>
+                            <td class="text-end">
+                                <form th:action="@{|/admin/employees/${employee.empNo}/certificate/${cert.id}/delete|}" method="post"
+                                      onsubmit="return confirm('자격증을 삭제하시겠습니까?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</section>
+</html>

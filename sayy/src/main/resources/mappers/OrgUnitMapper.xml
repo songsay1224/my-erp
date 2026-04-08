@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sayy.Mapper.OrgUnitMapper">
+
+    <resultMap id="OrgUnitMap" type="com.example.sayy.Entity.OrgUnitEntity">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="OrgUnitMap">
+        SELECT *
+        FROM org_units
+        ORDER BY
+            CASE WHEN parent_id IS NULL THEN 0 ELSE 1 END,
+            parent_id,
+            sort_order,
+            id
+    </select>
+
+    <select id="selectChildren" resultMap="OrgUnitMap">
+        SELECT *
+        FROM org_units
+        WHERE parent_id &lt;=&gt; #{parentId}
+        ORDER BY sort_order, id
+    </select>
+
+    <select id="selectById" resultMap="OrgUnitMap">
+        SELECT *
+        FROM org_units
+        WHERE id = #{id}
+    </select>
+
+    <select id="countChildren" resultType="int">
+        SELECT COUNT(*)
+        FROM org_units
+        WHERE parent_id = #{id}
+    </select>
+
+    <select id="selectMaxSortOrder" resultType="int">
+        SELECT COALESCE(MAX(sort_order), -1)
+        FROM org_units
+        WHERE parent_id &lt;=&gt; #{parentId}
+    </select>
+
+    <insert id="insert" parameterType="com.example.sayy.Entity.OrgUnitEntity" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO org_units (name, parent_id, sort_order)
+        VALUES (#{name}, #{parentId}, #{sortOrder})
+    </insert>
+
+    <update id="updateName">
+        UPDATE org_units
+        SET name = #{name}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateSortOrder">
+        UPDATE org_units
+        SET sort_order = #{sortOrder}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateParentAndSort">
+        UPDATE org_units
+        SET parent_id = #{parentId},
+            sort_order = #{sortOrder}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM org_units
+        WHERE id = #{id}
+    </delete>
+
+</mapper>
+

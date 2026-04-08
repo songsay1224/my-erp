@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sayy.Mapper.ClientMapper">
+
+    <resultMap id="ClientResultMap" type="com.example.sayy.Entity.ClientEntity">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="businessRegNo" column="business_reg_no"/>
+        <result property="corporateRegNo" column="corporate_reg_no"/>
+        <result property="ceoName" column="ceo_name"/>
+        <result property="industry" column="industry"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="zipCode" column="zip_code"/>
+        <result property="address" column="address"/>
+        <result property="addressDetail" column="address_detail"/>
+        <result property="status" column="status"/>
+        <result property="memo" column="memo"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <resultMap id="ContactResultMap" type="com.example.sayy.Entity.ClientContactEntity">
+        <id property="id" column="id"/>
+        <result property="clientId" column="client_id"/>
+        <result property="name" column="name"/>
+        <result property="department" column="department"/>
+        <result property="position" column="position"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="isPrimary" column="is_primary"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="ClientResultMap">
+        SELECT * FROM clients
+        <where>
+            <if test="status != null and status != ''">AND status = #{status}</if>
+            <if test="keyword != null and keyword != ''">
+                AND (name LIKE CONCAT('%', #{keyword}, '%')
+                  OR ceo_name LIKE CONCAT('%', #{keyword}, '%')
+                  OR business_reg_no LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY updated_at DESC
+    </select>
+
+    <select id="selectById" resultMap="ClientResultMap">
+        SELECT * FROM clients WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.example.sayy.Entity.ClientEntity" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO clients (name, business_reg_no, corporate_reg_no, ceo_name, industry, phone, email,
+                             zip_code, address, address_detail, status, memo)
+        VALUES (#{name}, #{businessRegNo}, #{corporateRegNo}, #{ceoName}, #{industry}, #{phone}, #{email},
+                #{zipCode}, #{address}, #{addressDetail}, #{status}, #{memo})
+    </insert>
+
+    <update id="update" parameterType="com.example.sayy.Entity.ClientEntity">
+        UPDATE clients SET
+            name = #{name}, business_reg_no = #{businessRegNo}, corporate_reg_no = #{corporateRegNo}, ceo_name = #{ceoName},
+            industry = #{industry}, phone = #{phone}, email = #{email},
+            zip_code = #{zipCode}, address = #{address}, address_detail = #{addressDetail},
+            status = #{status}, memo = #{memo}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">DELETE FROM clients WHERE id = #{id}</delete>
+
+    <select id="selectContactsByClientId" resultMap="ContactResultMap">
+        SELECT * FROM client_contacts WHERE client_id = #{clientId}
+        ORDER BY is_primary DESC, sort_order ASC, id ASC
+    </select>
+
+    <insert id="insertContact" parameterType="com.example.sayy.Entity.ClientContactEntity" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO client_contacts (client_id, name, department, position, phone, email, is_primary, sort_order)
+        VALUES (#{clientId}, #{name}, #{department}, #{position}, #{phone}, #{email}, #{isPrimary}, #{sortOrder})
+    </insert>
+
+    <update id="updateContact" parameterType="com.example.sayy.Entity.ClientContactEntity">
+        UPDATE client_contacts SET
+            name = #{name}, department = #{department}, position = #{position},
+            phone = #{phone}, email = #{email}, is_primary = #{isPrimary}
+        WHERE id = #{id} AND client_id = #{clientId}
+    </update>
+
+    <delete id="deleteContact">
+        DELETE FROM client_contacts WHERE id = #{id} AND client_id = #{clientId}
+    </delete>
+
+    <delete id="deleteAllContacts">
+        DELETE FROM client_contacts WHERE client_id = #{clientId}
+    </delete>
+
+</mapper>

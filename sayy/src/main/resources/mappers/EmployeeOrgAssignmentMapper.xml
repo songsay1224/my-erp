@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.sayy.Mapper.EmployeeOrgAssignmentMapper">
+
+    <resultMap id="EmployeeOrgAssignmentMap" type="com.example.sayy.Entity.EmployeeOrgAssignmentEntity">
+        <id property="id" column="id"/>
+        <result property="empNo" column="emp_no"/>
+        <result property="orgUnitId" column="org_unit_id"/>
+        <result property="titleName" column="title_name"/>
+        <result property="orgLeader" column="org_leader"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="selectByEmpNo" resultMap="EmployeeOrgAssignmentMap">
+        SELECT *
+        FROM employee_org_assignments
+        WHERE emp_no = #{empNo}
+        ORDER BY sort_order ASC, id ASC
+    </select>
+
+    <delete id="deleteByEmpNo">
+        DELETE FROM employee_org_assignments
+        WHERE emp_no = #{empNo}
+    </delete>
+
+    <insert id="insert" parameterType="com.example.sayy.Entity.EmployeeOrgAssignmentEntity" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO employee_org_assignments (emp_no, org_unit_id, title_name, org_leader, sort_order)
+        VALUES (#{empNo}, #{orgUnitId}, #{titleName}, #{orgLeader}, #{sortOrder})
+    </insert>
+
+</mapper>
+

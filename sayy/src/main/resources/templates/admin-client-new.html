@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/admin-shell :: layout('거래처 등록', 'clients', ~{::section})}">
+<section>
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div class="text-secondary small">거래처 관리 / 신규 등록</div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-outline-secondary" href="/admin/clients">취소</a>
+            <button class="btn btn-sm btn-dark" type="submit" form="clientForm">저장</button>
+        </div>
+    </div>
+
+    <div class="alert alert-danger py-2" th:if="${error}" th:text="${error}"></div>
+
+    <form id="clientForm" action="/admin/clients" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <div class="app-setting-card">
+            <div class="card-body">
+                <div class="fw-bold mb-3">기본 정보</div>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">거래처명 <span class="text-danger">*</span></label>
+                        <input class="form-control" name="name" required placeholder="(주)거래처명">
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">상태</label>
+                        <select class="form-select" name="status">
+                            <option value="ACTIVE" selected>거래중</option>
+                            <option value="DORMANT">휴면</option>
+                            <option value="CLOSED">거래종료</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">사업자등록번호</label>
+                        <input class="form-control" id="businessRegNo" name="businessRegNo"
+                               placeholder="000-00-00000" maxlength="12"
+                               oninput="maskBusinessRegNo(this)" onblur="validateBusinessRegNo(this)">
+                        <div class="invalid-feedback">형식: 000-00-00000 (10자리)</div>
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">법인등록번호</label>
+                        <input class="form-control" id="corporateRegNo" name="corporateRegNo"
+                               placeholder="000000-0000000" maxlength="14"
+                               oninput="maskCorporateRegNo(this)" onblur="validateCorporateRegNo(this)">
+                        <div class="invalid-feedback">형식: 000000-0000000 (13자리)</div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">대표자명</label>
+                        <input class="form-control" name="ceoName">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">업종/업태</label>
+                        <input class="form-control" name="industry" placeholder="IT서비스">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">대표 전화</label>
+                        <input class="form-control" name="phone" placeholder="02-0000-0000">
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">이메일</label>
+                        <input class="form-control" type="email" name="email">
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <label class="form-label">우편번호</label>
+                        <input class="form-control" name="zipCode" id="zipCode">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">주소</label>
+                        <input class="form-control" name="address" id="address">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">상세 주소</label>
+                        <input class="form-control" name="addressDetail" id="addressDetail">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">메모</label>
+                        <textarea class="form-control" name="memo" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <script th:inline="none">
+        function maskBusinessRegNo(el) {
+            var d = el.value.replace(/[^0-9]/g, '').substring(0, 10);
+            if (d.length > 5)      el.value = d.substring(0,3) + '-' + d.substring(3,5) + '-' + d.substring(5);
+            else if (d.length > 3) el.value = d.substring(0,3) + '-' + d.substring(3);
+            else                   el.value = d;
+            el.classList.remove('is-invalid', 'is-valid');
+        }
+        function validateBusinessRegNo(el) {
+            var d = el.value.replace(/[^0-9]/g, '');
+            if (el.value === '') { el.classList.remove('is-invalid', 'is-valid'); return; }
+            if (d.length === 10) el.classList.replace('is-invalid', 'is-valid') || el.classList.add('is-valid');
+            else                 el.classList.replace('is-valid', 'is-invalid') || el.classList.add('is-invalid');
+        }
+        function maskCorporateRegNo(el) {
+            var d = el.value.replace(/[^0-9]/g, '').substring(0, 13);
+            if (d.length > 6) el.value = d.substring(0,6) + '-' + d.substring(6);
+            else               el.value = d;
+            el.classList.remove('is-invalid', 'is-valid');
+        }
+        function validateCorporateRegNo(el) {
+            var d = el.value.replace(/[^0-9]/g, '');
+            if (el.value === '') { el.classList.remove('is-invalid', 'is-valid'); return; }
+            if (d.length === 13) el.classList.replace('is-invalid', 'is-valid') || el.classList.add('is-valid');
+            else                 el.classList.replace('is-valid', 'is-invalid') || el.classList.add('is-invalid');
+        }
+    </script>
+</section>
+</html>
