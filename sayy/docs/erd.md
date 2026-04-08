@@ -74,6 +74,9 @@ d
 
 ### `employees` (직원 기본 정보)
 
+
+
+
 | 컬럼 | 타입 | 의미 | 비고 |
 |---|---|---|---|
 | `emp_no` | VARCHAR(30) | 사번(직원 식별자) | PK |
@@ -86,8 +89,12 @@ d
 
 ### `users` (로그인 계정)
 
+
+### `users` (로그인 계정 )
 | 컬럼 | 타입 | 의미 | 비고 |
 |---|---|---|---|
+
+
 | `username` | VARCHAR(50) | 로그인 아이디 | PK |
 | `pwd` | VARCHAR(255) | 비밀번호(해시) | 평문 저장 금지 |
 | `role` | VARCHAR(20) | 권한(Role) | 기본값: `USER` (예: `ADMIN`, `USER`) |
@@ -150,4 +157,5 @@ d
   - `users.employee_no`에 **UNIQUE**가 있어 **직원 1명당 계정 최대 1개** 구조(옵션 1:1)
 - **`org_units` 자기참조**: `org_units.parent_id`가 `org_units.id`를 참조
   - 루트 노드는 `parent_id = NULL`
+
 
