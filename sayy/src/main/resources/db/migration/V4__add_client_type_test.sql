@@ -1,0 +1,2 @@
+ALTER TABLE clients
+ADD COLUMN test VARCHAR(50) NULL COMMENT '테스트' ;
