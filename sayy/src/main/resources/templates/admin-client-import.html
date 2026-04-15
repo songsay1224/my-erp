@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/admin-shell :: layout('거래처 일괄 등록', 'clients', ~{::section})}">
+<section>
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div class="text-secondary small">거래처 관리 / 일괄 등록</div>
+        <a class="btn btn-sm btn-outline-secondary" href="/admin/clients">목록으로</a>
+    </div>
+
+    <div class="alert alert-success py-2" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-danger py-2" th:if="${error}" th:text="${error}"></div>
+
+    <!-- 파일 업로드 -->
+    <div class="app-setting-card mb-3" th:if="${rows == null}">
+        <div class="card-body">
+            <div class="fw-bold mb-1">파일 업로드</div>
+            <div class="text-secondary small mb-3">
+                CSV 또는 Excel(.xlsx) 파일을 업로드하세요.<br>
+                <strong>필수:</strong> 법인명(단체명) &nbsp;|&nbsp;
+                <strong>선택:</strong> 구분, 등록번호, 대표자, 법인등록번호, 지역, 주소, 상세주소, 대표번호, 홈페이지
+            </div>
+            <div class="d-flex gap-2 mb-3">
+                <a href="/admin/clients/import/template" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-download"></i> 템플릿 다운로드
+                </a>
+            </div>
+            <form method="post" action="/admin/clients/import/preview" enctype="multipart/form-data">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                    <input type="file" name="file" class="form-control form-control-sm" style="max-width:320px"
+                           accept=".csv,.xlsx,.xls" required>
+                    <button type="submit" class="btn btn-sm btn-dark">
+                        <i class="bi bi-eye"></i> 미리보기
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 미리보기 결과 -->
+    <div th:if="${rows != null}">
+        <div class="app-setting-card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <span class="fw-bold">미리보기</span>
+                        <span class="ms-2 text-secondary small">
+                            전체 <strong th:text="${totalCount}">0</strong>건,
+                            오류 <strong class="text-danger" th:text="${errorCount}">0</strong>건
+                        </span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="/admin/clients/import" class="btn btn-sm btn-outline-secondary">다시 업로드</a>
+                        <form method="post" action="/admin/clients/import/commit" id="commitForm">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="button" class="btn btn-sm btn-dark"
+                                    onclick="confirmCommit()"
+                                    th:disabled="${errorCount == totalCount}">
+                                <i class="bi bi-upload"></i> 등록 확정
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover small mb-0">
+                        <thead class="table-light text-center">
+                            <tr>
+                                <th style="width:44px">행</th>
+                                <th style="width:60px">구분</th>
+                                <th style="width:120px">등록번호</th>
+                                <th style="width:150px">법인명(단체명)</th>
+                                <th style="width:80px">대표자</th>
+                                <th style="width:140px">법인등록번호</th>
+                                <th style="width:60px">지역</th>
+                                <th>주소</th>
+                                <th style="width:120px">대표번호</th>
+                                <th>오류</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="row : ${rows}"
+                                th:classappend="${row.hasError() ? ' table-danger' : ''}">
+                                <td class="text-center align-middle" th:text="${row.rowNum}">1</td>
+                                <td class="align-middle" th:text="${row.clientType != null ? row.clientType : '매출'}">매출</td>
+                                <td class="align-middle" th:text="${row.businessRegNo != null ? row.businessRegNo : ''}">-</td>
+                                <td class="align-middle fw-semibold" th:text="${row.name != null ? row.name : ''}">-</td>
+                                <td class="align-middle" th:text="${row.ceoName != null ? row.ceoName : ''}">-</td>
+                                <td class="align-middle" th:text="${row.corporateRegNo != null ? row.corporateRegNo : ''}">-</td>
+                                <td class="align-middle" th:text="${row.region != null ? row.region : ''}">-</td>
+                                <td class="align-middle small text-secondary"
+                                    th:text="${(row.address != null ? row.address : '') + (row.addressDetail != null ? ' ' + row.addressDetail : '')}">-</td>
+                                <td class="align-middle" th:text="${row.phone != null ? row.phone : ''}">-</td>
+                                <td class="align-middle text-danger small"
+                                    th:text="${row.hasError() ? row.errorMessage : ''}">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="none">
+        function confirmCommit() {
+            if (!confirm('오류가 없는 항목만 등록됩니다. 계속하시겠습니까?')) return;
+            document.getElementById('commitForm').submit();
+        }
+    </script>
+</section>
+</html>

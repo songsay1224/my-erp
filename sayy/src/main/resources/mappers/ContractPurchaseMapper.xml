@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sayy.Mapper.ContractPurchaseMapper">
+
+    <resultMap id="PurchaseResultMap" type="com.example.sayy.Entity.ContractPurchaseEntity">
+        <id property="id" column="id"/>
+        <result property="projectId" column="project_id"/>
+        <result property="purchaseType" column="purchase_type"/>
+        <result property="projectName" column="project_name"/>
+        <result property="subcontractName" column="subcontract_name"/>
+        <result property="vendorName" column="vendor_name"/>
+        <result property="contractDate" column="contract_date"/>
+        <result property="contractStart" column="contract_start"/>
+        <result property="contractEnd" column="contract_end"/>
+        <result property="supplyAmount" column="supply_amount"/>
+        <result property="vatAmount" column="vat_amount"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="memo" column="memo"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="selectByProjectId" resultMap="PurchaseResultMap">
+        SELECT * FROM contract_purchases WHERE project_id = #{projectId} ORDER BY id DESC
+    </select>
+
+    <select id="selectById" resultMap="PurchaseResultMap">
+        SELECT * FROM contract_purchases WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.example.sayy.Entity.ContractPurchaseEntity"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO contract_purchases (project_id, purchase_type, project_name,
+                                        subcontract_name, vendor_name,
+                                        contract_date, contract_start, contract_end,
+                                        supply_amount, vat_amount, total_amount, memo)
+        VALUES (#{projectId}, #{purchaseType}, #{projectName},
+                #{subcontractName}, #{vendorName},
+                #{contractDate}, #{contractStart}, #{contractEnd},
+                #{supplyAmount}, #{vatAmount}, #{totalAmount}, #{memo})
+    </insert>
+
+    <update id="update" parameterType="com.example.sayy.Entity.ContractPurchaseEntity">
+        UPDATE contract_purchases SET
+            purchase_type = #{purchaseType},
+            project_name = #{projectName},
+            subcontract_name = #{subcontractName},
+            vendor_name = #{vendorName},
+            contract_date = #{contractDate},
+            contract_start = #{contractStart},
+            contract_end = #{contractEnd},
+            supply_amount = #{supplyAmount},
+            vat_amount = #{vatAmount},
+            total_amount = #{totalAmount},
+            memo = #{memo}
+        WHERE id = #{id} AND project_id = #{projectId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM contract_purchases WHERE id = #{id} AND project_id = #{projectId}
+    </delete>
+
+</mapper>

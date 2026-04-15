@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/admin-shell :: layout('계약서 관리', 'contract-list', ~{::section})}">
+<section>
+
+    <div class="alert alert-success py-2 mb-2" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-danger py-2 mb-2" th:if="${error}" th:text="${error}"></div>
+
+    <!-- 상단 버튼 / 검색 -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+        <!-- 좌측 버튼 -->
+        <div class="d-flex gap-1 flex-wrap align-items-center">
+            <button class="btn btn-sm btn-dark" disabled>
+                <i class="bi bi-plus-lg"></i> 등록
+            </button>
+            <form id="deleteForm" method="post" action="/admin/contract-list/delete-selected" style="display:inline">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="submitDelete()">
+                    <i class="bi bi-trash"></i> 삭제
+                </button>
+            </form>
+            <button class="btn btn-sm btn-outline-secondary" disabled>
+                <i class="bi bi-upload"></i> 일괄 등록
+            </button>
+            <a class="btn btn-sm btn-outline-secondary" href="#">
+                <i class="bi bi-download"></i> 목록 다운로드
+            </a>
+        </div>
+
+        <!-- 우측: 검색 + 페이지당 건수 -->
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            <form class="d-flex gap-1 flex-wrap align-items-center" method="get" action="/admin/contract-list" id="searchForm">
+                <!-- 관리년도 드롭다운 -->
+                <select class="form-select form-select-sm" name="managementYear" style="width:100px"
+                        onchange="document.getElementById('searchForm').submit()">
+                    <option value="" th:selected="${selectedYear == null}">전체 년도</option>
+                    <option th:each="y : ${years}"
+                            th:value="${y}"
+                            th:text="${y}"
+                            th:selected="${selectedYear == y}"></option>
+                </select>
+                <div class="input-group input-group-sm" style="width:240px">
+                    <input class="form-control" type="search" name="keyword"
+                           th:value="${keyword}" placeholder="계약건명, 수요기관 검색">
+                    <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+                </div>
+                <input type="hidden" name="page" value="1"/>
+                <input type="hidden" name="pageSize" th:value="${pageSize != null ? pageSize : 20}"/>
+            </form>
+
+            <!-- 페이지당 건수 -->
+            <form method="get" action="/admin/contract-list" class="d-flex align-items-center gap-1">
+                <input type="hidden" name="managementYear" th:value="${selectedYear}"/>
+                <input type="hidden" name="keyword" th:value="${keyword}"/>
+                <input type="hidden" name="page" value="1"/>
+                <select class="form-select form-select-sm" name="pageSize" style="width:80px"
+                        onchange="this.form.submit()">
+                    <option value="10"  th:selected="${pageSize == 10}">10</option>
+                    <option value="20"  th:selected="${pageSize == 20}">20</option>
+                    <option value="50"  th:selected="${pageSize == 50}">50</option>
+                    <option value="100" th:selected="${pageSize == 100}">100</option>
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <!-- 테이블 -->
+    <div class="app-setting-card p-0">
+        <div th:if="${#lists.isEmpty(rows)}" class="text-secondary small p-4 text-center">
+            등록된 계약이 없습니다.
+        </div>
+        <div class="table-responsive" th:if="${!#lists.isEmpty(rows)}">
+            <table class="table table-hover table-bordered mb-0 small">
+                <thead class="table-light text-center">
+                    <tr>
+                        <th style="width:36px">
+                            <input type="checkbox" id="checkAll" onclick="toggleAll(this)"/>
+                        </th>
+                        <th style="width:44px">No.</th>
+                        <th style="width:80px">관리년도</th>
+                        <th>수요기관</th>
+                        <th>계약건명</th>
+                        <th style="width:80px">L1</th>
+                        <th style="width:80px">L2</th>
+                        <th style="width:80px">L3</th>
+                        <th style="width:160px">계약금액</th>
+                        <th style="width:100px">계약체결일</th>
+                        <th style="width:100px">계약시작일</th>
+                        <th style="width:100px">계약종료일</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="row, stat : ${rows}">
+                        <td class="text-center align-middle">
+                            <input type="checkbox" class="row-check" th:value="${row.id}"/>
+                        </td>
+                        <td class="text-center align-middle text-secondary"
+                            th:text="${(page - 1) * pageSize + stat.count}">1</td>
+                        <td class="text-center align-middle"
+                            th:text="${row.managementYear != null ? row.managementYear : '-'}">-</td>
+                        <td class="align-middle"
+                            th:text="${row.customerAgency != null ? row.customerAgency : '-'}">-</td>
+                        <td class="align-middle">
+                            <a th:href="@{/admin/contract-list/{id}(id=${row.id})}"
+                               class="text-dark text-decoration-none"
+                               th:text="${row.contractName != null ? row.contractName : row.name}">-</a>
+                        </td>
+                        <td class="align-middle text-secondary"
+                            th:text="${row.categoryMajor != null ? row.categoryMajor : '-'}">-</td>
+                        <td class="align-middle text-secondary"
+                            th:text="${row.categoryMinor != null ? row.categoryMinor : '-'}">-</td>
+                        <td class="align-middle text-secondary"
+                            th:text="${row.categoryL3 != null ? row.categoryL3 : '-'}">-</td>
+                        <td class="align-middle text-end"
+                            th:text="${row.contractAmount != null ? #numbers.formatInteger(row.contractAmount, 0, 'COMMA') + ' 원' : '-'}">-</td>
+                        <td class="text-center align-middle text-secondary"
+                            th:text="${row.contractDate != null ? #temporals.format(row.contractDate, 'yyyy-MM-dd') : '-'}">-</td>
+                        <td class="text-center align-middle text-secondary"
+                            th:text="${row.contractStart != null ? #temporals.format(row.contractStart, 'yyyy-MM-dd') : '-'}">-</td>
+                        <td class="text-center align-middle text-secondary"
+                            th:text="${row.contractEnd != null ? #temporals.format(row.contractEnd, 'yyyy-MM-dd') : '-'}">-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2"
+         th:if="${totalPages > 0}">
+        <div class="text-secondary small">
+            전체 <span th:text="${total}">0</span>건
+        </div>
+        <nav th:if="${totalPages > 1}">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item" th:classappend="${page <= 1 ? ' disabled' : ''}">
+                    <a class="page-link"
+                       th:href="@{/admin/contract-list(managementYear=${selectedYear},keyword=${keyword},page=${page-1},pageSize=${pageSize})}">
+                        &laquo;
+                    </a>
+                </li>
+                <li class="page-item"
+                    th:each="p : ${#numbers.sequence(1, totalPages)}"
+                    th:classappend="${p == page ? ' active' : ''}">
+                    <a class="page-link"
+                       th:href="@{/admin/contract-list(managementYear=${selectedYear},keyword=${keyword},page=${p},pageSize=${pageSize})}"
+                       th:text="${p}">1</a>
+                </li>
+                <li class="page-item" th:classappend="${page >= totalPages ? ' disabled' : ''}">
+                    <a class="page-link"
+                       th:href="@{/admin/contract-list(managementYear=${selectedYear},keyword=${keyword},page=${page+1},pageSize=${pageSize})}">
+                        &raquo;
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <script>
+        function toggleAll(cb) {
+            document.querySelectorAll('.row-check').forEach(c => c.checked = cb.checked);
+        }
+        function submitDelete() {
+            const checked = Array.from(document.querySelectorAll('.row-check:checked')).map(c => c.value);
+            if (checked.length === 0) { alert('삭제할 계약을 선택하세요.'); return; }
+            if (!confirm(checked.length + '개 계약을 삭제하시겠습니까?')) return;
+            const form = document.getElementById('deleteForm');
+            document.querySelectorAll('.del-id-input').forEach(e => e.remove());
+            checked.forEach(id => {
+                const inp = document.createElement('input');
+                inp.type = 'hidden'; inp.name = 'ids'; inp.value = id;
+                inp.className = 'del-id-input';
+                form.appendChild(inp);
+            });
+            form.submit();
+        }
+    </script>
+
+</section>
+</html>

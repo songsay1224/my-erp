@@ -51,6 +51,8 @@
         <result property="paymentCondition" column="payment_condition"/>
         <result property="defectPeriod" column="defect_period"/>
         <result property="penaltyRate" column="penalty_rate"/>
+        <result property="managementYear" column="management_year"/>
+        <result property="categoryL3" column="category_l3"/>
     </resultMap>
 
     <resultMap id="ContractResultMap" type="com.example.sayy.Entity.ContractEntity">
@@ -103,18 +105,18 @@
     <insert id="insert" parameterType="com.example.sayy.Entity.ProjectEntity" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO projects (name, client_id, status, start_date, end_date, contract_amount, description, memo,
             project_code, approved_date, pm_emp_no, executive_emp_no, business_place,
-            category_major, category_minor, division, department, org_unit_id,
+            category_major, category_minor, category_l3, division, department, org_unit_id,
             participation_type, supply_type, sales_emp_no,
             customer_agency, customer_ordering, contract_name, contract_date, contract_start, contract_end,
             as_start, as_end, our_share_rate, our_amount, our_amount_vat_ex, contract_amount_vat_ex,
-            payment_condition, defect_period, penalty_rate)
+            payment_condition, defect_period, penalty_rate, management_year)
         VALUES (#{name}, #{clientId}, #{status}, #{startDate}, #{endDate}, #{contractAmount}, #{description}, #{memo},
             #{projectCode}, #{approvedDate}, #{pmEmpNo}, #{executiveEmpNo}, #{businessPlace},
-            #{categoryMajor}, #{categoryMinor}, #{division}, #{department}, #{orgUnitId},
+            #{categoryMajor}, #{categoryMinor}, #{categoryL3}, #{division}, #{department}, #{orgUnitId},
             #{participationType}, #{supplyType}, #{salesEmpNo},
             #{customerAgency}, #{customerOrdering}, #{contractName}, #{contractDate}, #{contractStart}, #{contractEnd},
             #{asStart}, #{asEnd}, #{ourShareRate}, #{ourAmount}, #{ourAmountVatEx}, #{contractAmountVatEx},
-            #{paymentCondition}, #{defectPeriod}, #{penaltyRate})
+            #{paymentCondition}, #{defectPeriod}, #{penaltyRate}, #{managementYear})
     </insert>
 
     <update id="update" parameterType="com.example.sayy.Entity.ProjectEntity">
@@ -125,7 +127,7 @@
             project_code = #{projectCode}, approved_date = #{approvedDate},
             pm_emp_no = #{pmEmpNo}, executive_emp_no = #{executiveEmpNo},
             business_place = #{businessPlace}, category_major = #{categoryMajor},
-            category_minor = #{categoryMinor}, division = #{division}, department = #{department},
+            category_minor = #{categoryMinor}, category_l3 = #{categoryL3}, division = #{division}, department = #{department},
             org_unit_id = #{orgUnitId}, participation_type = #{participationType},
             supply_type = #{supplyType}, sales_emp_no = #{salesEmpNo},
             customer_agency = #{customerAgency}, customer_ordering = #{customerOrdering},
@@ -135,11 +137,54 @@
             our_share_rate = #{ourShareRate}, our_amount = #{ourAmount},
             our_amount_vat_ex = #{ourAmountVatEx}, contract_amount_vat_ex = #{contractAmountVatEx},
             payment_condition = #{paymentCondition}, defect_period = #{defectPeriod},
-            penalty_rate = #{penaltyRate}
+            penalty_rate = #{penaltyRate}, management_year = #{managementYear}
         WHERE id = #{id}
     </update>
 
     <delete id="deleteById">DELETE FROM projects WHERE id = #{id}</delete>
+
+    <delete id="deleteByIds">
+        DELETE FROM projects WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
+
+    <!-- 계약서 관리 목록 (projects 기반) -->
+    <select id="selectContractList" resultMap="ProjectResultMap">
+        SELECT p.*,
+               c.name AS client_name
+        FROM projects p
+        LEFT JOIN clients c ON c.id = p.client_id
+        <where>
+            <if test="managementYear != null">AND p.management_year = #{managementYear}</if>
+            <if test="keyword != null and keyword != ''">
+                AND (p.contract_name LIKE CONCAT('%', #{keyword}, '%')
+                  OR p.customer_agency LIKE CONCAT('%', #{keyword}, '%')
+                  OR p.name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY p.contract_date DESC, p.id DESC
+        <if test="limit != null">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
+    </select>
+
+    <select id="countContractList" resultType="long">
+        SELECT COUNT(1) FROM projects p
+        <where>
+            <if test="managementYear != null">AND p.management_year = #{managementYear}</if>
+            <if test="keyword != null and keyword != ''">
+                AND (p.contract_name LIKE CONCAT('%', #{keyword}, '%')
+                  OR p.customer_agency LIKE CONCAT('%', #{keyword}, '%')
+                  OR p.name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+    <select id="selectDistinctManagementYears" resultType="int">
+        SELECT DISTINCT management_year FROM projects
+        WHERE management_year IS NOT NULL
+        ORDER BY management_year DESC
+    </select>
 
     <!-- 계약서 -->
     <select id="selectContractsByProjectId" resultMap="ContractResultMap">

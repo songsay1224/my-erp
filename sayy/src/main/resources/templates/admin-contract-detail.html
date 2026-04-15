@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/admin-shell :: layout('계약서 정보', 'contract-list', ~{::section})}">
+<section>
+
+    <div class="alert alert-success py-2 mb-0" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-danger py-2 mb-0" th:if="${error}" th:text="${error}"></div>
+
+    <!-- 헤더 -->
+    <div class="app-profile-header">
+        <div class="app-profile-header-info">
+            <div class="app-profile-name"
+                 th:text="${project.contractName != null ? project.contractName : project.name}">-</div>
+            <div class="d-flex gap-2 align-items-center mt-1">
+                <span class="badge" th:classappend="${project.statusBadgeClass}"
+                      th:text="${project.statusLabel}">-</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 탭 네비게이션 + 우측 버튼 -->
+    <div class="d-flex justify-content-between align-items-center">
+        <ul class="nav app-profile-tabs mt-3 mb-0 flex-grow-1">
+            <li class="nav-item">
+                <a class="nav-link"
+                   th:classappend="${tab == null or tab == 'basic' ? ' active' : ''}"
+                   th:href="@{/admin/contract-list/{id}(id=${project.id},tab='basic')}">기본정보</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link"
+                   th:classappend="${tab == 'contract' ? ' active' : ''}"
+                   th:href="@{/admin/contract-list/{id}(id=${project.id},tab='contract')}">계약서 정보</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link"
+                   th:classappend="${tab == 'amount' ? ' active' : ''}"
+                   th:href="@{/admin/contract-list/{id}(id=${project.id},tab='amount')}">금액 정보</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link"
+                   th:classappend="${tab == 'sales' ? ' active' : ''}"
+                   th:href="@{/admin/contract-list/{id}(id=${project.id},tab='sales')}">매출 정보</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link"
+                   th:classappend="${tab == 'performance' ? ' active' : ''}"
+                   th:href="@{/admin/contract-list/{id}(id=${project.id},tab='performance')}">실적 정보</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link"
+                   th:classappend="${tab == 'purchase' ? ' active' : ''}"
+                   th:href="@{/admin/contract-list/{id}(id=${project.id},tab='purchase')}">구매 정보</a>
+            </li>
+        </ul>
+        <div class="d-flex gap-2 align-items-center ms-3 mt-3">
+            <a class="btn btn-sm btn-outline-secondary" href="/admin/contract-list">목록</a>
+            <a class="btn btn-sm btn-outline-dark" th:href="@{|/admin/contract-list/${project.id}/edit|}">
+                <i class="bi bi-pencil"></i> 수정
+            </a>
+            <form th:action="@{|/admin/contract-list/${project.id}/delete|}" method="post"
+                  style="display:inline" onsubmit="return confirm('삭제하시겠습니까?')">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit" class="btn btn-sm btn-outline-danger">삭제</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== 기본정보 탭 ===== -->
+    <div th:if="${tab == null or tab == 'basic'}" class="app-profile-section">
+        <div class="app-profile-card">
+            <div class="app-profile-card-head">
+                <div class="fw-bold">기본정보</div>
+                <a class="btn btn-sm btn-outline-secondary" th:href="@{|/admin/contract-list/${project.id}/edit|}">
+                    <i class="bi bi-pencil"></i>
+                </a>
+            </div>
+            <div class="app-profile-card-body">
+                <div class="row g-0 app-kv">
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">관리년도</div>
+                            <div class="app-kv-val" th:text="${project.managementYear != null ? project.managementYear : '-'}">-</div>
+                        </div>
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">계약체결일</div>
+                            <div class="app-kv-val" th:text="${project.contractDate != null ? #temporals.format(project.contractDate,'yyyy-MM-dd') : '-'}">-</div>
+                        </div>
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">프로젝트 코드</div>
+                            <div class="app-kv-val" th:text="${project.projectCode != null ? project.projectCode : '-'}">-</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">PM</div>
+                            <div class="app-kv-val" th:text="${project.pmName != null ? project.pmName : '-'}">-</div>
+                        </div>
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">담당 임원</div>
+                            <div class="app-kv-val" th:text="${project.executiveName != null ? project.executiveName : '-'}">-</div>
+                        </div>
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">영업 담당</div>
+                            <div class="app-kv-val" th:text="${project.salesName != null ? project.salesName : '-'}">-</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">사업장</div>
+                            <div class="app-kv-val" th:text="${project.businessPlace != null ? project.businessPlace : '-'}">-</div>
+                        </div>
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">수행 부서</div>
+                            <div class="app-kv-val" th:text="${project.orgUnitName != null ? project.orgUnitName : '-'}">-</div>
+                        </div>
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">참여형태</div>
+                            <div class="app-kv-val" th:text="${project.participationType != null ? project.participationType : '-'}">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="app-profile-card">
+            <div class="app-profile-card-head"><div class="fw-bold">거래서 정보</div></div>
+            <div class="app-profile-card-body">
+                <div class="row g-0 app-kv">
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">발주처</div>
+                            <div class="app-kv-val">
+                                <a th:if="${project.clientId != null}" th:href="@{|/admin/clients/${project.clientId}|}"
+                                   class="text-decoration-none" th:text="${project.clientName}">-</a>
+                                <span th:if="${project.clientId == null}" class="text-secondary">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">주사업자</div>
+                            <div class="app-kv-val" th:text="${project.customerOrdering != null ? project.customerOrdering : '-'}">-</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">수요기관</div>
+                            <div class="app-kv-val" th:text="${project.customerAgency != null ? project.customerAgency : '-'}">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="app-profile-card" th:if="${project.memo != null and !project.memo.isBlank()}">
+            <div class="app-profile-card-head"><div class="fw-bold">메모</div></div>
+            <div class="app-profile-card-body">
+                <div class="small" style="white-space:pre-line" th:text="${project.memo}">-</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 계약서 정보 탭 ===== -->
+    <div th:if="${tab == 'contract'}" class="app-profile-section">
+        <div class="app-profile-card">
+            <div class="app-profile-card-head">
+                <div class="fw-bold">계약서 정보</div>
+                <a class="btn btn-sm btn-outline-secondary" th:href="@{|/admin/contract-list/${project.id}/edit|}">
+                    <i class="bi bi-pencil"></i>
+                </a>
+            </div>
+            <div class="app-profile-card-body">
+                <div class="row g-0 app-kv">
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">계약번호</div>
+                            <div class="app-kv-val" th:text="${project.projectCode != null ? project.projectCode : '-'}">-</div>
+                        </div>
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">계약명</div>
+                            <div class="app-kv-val fw-semibold" th:text="${project.contractName != null ? project.contractName : project.name}">-</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">계약시작일</div>
+                            <div class="app-kv-val" th:text="${project.contractStart != null ? #temporals.format(project.contractStart,'yyyy-MM-dd') : '-'}">-</div>
+                        </div>
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">계약종료일</div>
+                            <div class="app-kv-val" th:text="${project.contractEnd != null ? #temporals.format(project.contractEnd,'yyyy-MM-dd') : '-'}">-</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">계약기간</div>
+                            <div class="app-kv-val" th:text="${(project.contractStart != null and project.contractEnd != null) ? #temporals.format(project.contractStart,'yyyy-MM-dd') + ' ~ ' + #temporals.format(project.contractEnd,'yyyy-MM-dd') : '-'}">-</div>
+                        </div>
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">결재조건</div>
+                            <div class="app-kv-val" th:text="${project.paymentCondition != null ? project.paymentCondition : '-'}">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ===== 금액 정보 탭 ===== -->
+    <div th:if="${tab == 'amount'}" class="app-profile-section">
+        <div class="app-profile-card">
+            <div class="app-profile-card-head">
+                <div class="fw-bold">금액 정보</div>
+                <a class="btn btn-sm btn-outline-secondary" th:href="@{|/admin/contract-list/${project.id}/edit|}">
+                    <i class="bi bi-pencil"></i>
+                </a>
+            </div>
+            <div class="app-profile-card-body">
+                <div class="row g-0 app-kv">
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">공급가액</div>
+                            <div class="app-kv-val fw-semibold" th:text="${project.ourAmountVatEx != null ? #numbers.formatInteger(project.ourAmountVatEx,0,'COMMA') + ' 원' : '-'}">-</div>
+                        </div>
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">부가세액</div>
+                            <div class="app-kv-val" th:text="${(project.ourAmount != null and project.ourAmountVatEx != null) ? #numbers.formatInteger(project.ourAmount - project.ourAmountVatEx,0,'COMMA') + ' 원' : '-'}">-</div>
+                        </div>
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">사업금액</div>
+                            <div class="app-kv-val fw-semibold" th:text="${project.contractAmount != null ? #numbers.formatInteger(project.contractAmount,0,'COMMA') + ' 원' : '-'}">-</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">수급형태</div>
+                            <div class="app-kv-val" th:text="${project.supplyType != null ? project.supplyType : '-'}">-</div>
+                        </div>
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">지분율</div>
+                            <div class="app-kv-val" th:text="${project.ourShareRate != null ? project.ourShareRate + ' %' : '-'}">-</div>
+                        </div>
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">개약금액</div>
+                            <div class="app-kv-val" th:text="${project.ourAmount != null ? #numbers.formatInteger(project.ourAmount,0,'COMMA') + ' 원' : '-'}">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="app-profile-card">
+            <div class="app-profile-card-head"><div class="fw-bold">사업단유분</div></div>
+            <div class="app-profile-card-body">
+                <div class="row g-0 app-kv">
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">L1</div>
+                            <div class="app-kv-val" th:text="${project.categoryMajor != null ? project.categoryMajor : '-'}">-</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">L2</div>
+                            <div class="app-kv-val" th:text="${project.categoryMinor != null ? project.categoryMinor : '-'}">-</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="app-kv-row">
+                            <div class="app-kv-key">L3</div>
+                            <div class="app-kv-val" th:text="${project.categoryL3 != null ? project.categoryL3 : '-'}">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 매출 정보 탭 ===== -->
+    <div th:if="${tab == 'sales'}" class="app-profile-section">
+        <div class="app-profile-card">
+            <div class="app-profile-card-head">
+                <div class="fw-bold">매출 정보</div>
+                <button class="btn btn-sm btn-outline-dark" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#salesAddForm">
+                    <i class="bi bi-plus-lg"></i> 추가
+                </button>
+            </div>
+            <div class="app-profile-card-body p-0">
+
+                <!-- 등록 폼 -->
+                <div class="collapse" id="salesAddForm">
+                    <form th:action="@{|/admin/contract-list/${project.id}/sales|}" method="post"
+                          class="p-3 border-bottom bg-light">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-4">
+                                <label class="form-label form-label-sm">계약명</label>
+                                <input class="form-control form-control-sm" name="contractName">
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label form-label-sm">수요기관</label>
+                                <input class="form-control form-control-sm" name="customerAgency">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label form-label-sm">계약금액</label>
+                                <input class="form-control form-control-sm" type="number" name="contractAmount" min="0">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label form-label-sm">누적기성</label>
+                                <input class="form-control form-control-sm" type="number" name="accumulatedProgress" min="0">
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-2">
+                            <button type="submit" class="btn btn-sm btn-dark">등록</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                    data-bs-toggle="collapse" data-bs-target="#salesAddForm">취소</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 테이블 -->
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered mb-0 small">
+                        <thead class="table-light text-center">
+                            <tr>
+                                <th style="width:44px">No.</th>
+                                <th>계약명</th>
+                                <th>수요기관</th>
+                                <th style="width:140px">계약금액</th>
+                                <th style="width:140px">누적기성</th>
+                                <th style="width:60px">삭제</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(salesList)}">
+                                <td colspan="6" class="text-center text-secondary py-3">현재 연동된 데이터가 없습니다.</td>
+                            </tr>
+                            <tr th:each="s, stat : ${salesList}">
+                                <td class="text-center align-middle text-secondary" th:text="${stat.count}">1</td>
+                                <td class="align-middle" th:text="${s.contractName != null ? s.contractName : '-'}">-</td>
+                                <td class="align-middle" th:text="${s.customerAgency != null ? s.customerAgency : '-'}">-</td>
+                                <td class="align-middle text-end" th:text="${s.contractAmount != null ? #numbers.formatInteger(s.contractAmount,0,'COMMA') + ' 원' : '-'}">-</td>
+                                <td class="align-middle text-end" th:text="${s.accumulatedProgress != null ? #numbers.formatInteger(s.accumulatedProgress,0,'COMMA') + ' 원' : '-'}">-</td>
+                                <td class="text-center align-middle">
+                                    <form th:action="@{|/admin/contract-list/${project.id}/sales/${s.id}/delete|}"
+                                          method="post" onsubmit="return confirm('삭제하시겠습니까?')">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 실적 정보 탭 ===== -->
+    <div th:if="${tab == 'performance'}" class="app-profile-section">
+        <div class="app-profile-card">
+            <div class="app-profile-card-head">
+                <div class="fw-bold">실적 정보</div>
+                <button class="btn btn-sm btn-outline-dark" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#perfAddForm">
+                    <i class="bi bi-plus-lg"></i> 추가
+                </button>
+            </div>
+            <div class="app-profile-card-body p-0">
+
+                <!-- 등록 폼 -->
+                <div class="collapse" id="perfAddForm">
+                    <form th:action="@{|/admin/contract-list/${project.id}/performance|}" method="post"
+                          class="p-3 border-bottom bg-light">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-4">
+                                <label class="form-label form-label-sm">수요기관</label>
+                                <input class="form-control form-control-sm" name="customerAgency">
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label form-label-sm">계약번명</label>
+                                <input class="form-control form-control-sm" name="contractName">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label form-label-sm">사업금액</label>
+                                <input class="form-control form-control-sm" type="number" name="businessAmount" min="0">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label form-label-sm">수급형태</label>
+                                <input class="form-control form-control-sm" name="supplyType">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label form-label-sm">지불률 (%)</label>
+                                <input class="form-control form-control-sm" type="number" step="0.01" name="paymentRate">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label form-label-sm">계약금액</label>
+                                <input class="form-control form-control-sm" type="number" name="contractAmount" min="0">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label form-label-sm">준공일</label>
+                                <input class="form-control form-control-sm" type="date" name="completionDate">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label form-label-sm">사업기간</label>
+                                <input class="form-control form-control-sm" name="businessPeriod">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label form-label-sm">L1</label>
+                                <input class="form-control form-control-sm" name="categoryL1">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label form-label-sm">L2</label>
+                                <input class="form-control form-control-sm" name="categoryL2">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label form-label-sm">L3</label>
+                                <input class="form-control form-control-sm" name="categoryL3">
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-2">
+                            <button type="submit" class="btn btn-sm btn-dark">등록</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                    data-bs-toggle="collapse" data-bs-target="#perfAddForm">취소</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 테이블 -->
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered mb-0 small">
+                        <thead class="table-light text-center">
+                            <tr>
+                                <th style="width:44px">No.</th>
+                                <th>수요기관</th>
+                                <th>계약번명</th>
+                                <th style="width:110px">사업금액</th>
+                                <th style="width:70px">수급형태</th>
+                                <th style="width:60px">지불률</th>
+                                <th style="width:110px">계약금액</th>
+                                <th style="width:90px">준공일</th>
+                                <th style="width:100px">사업기간</th>
+                                <th style="width:80px">L1</th>
+                                <th style="width:80px">L2</th>
+                                <th style="width:80px">L3</th>
+                                <th style="width:60px">삭제</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(performanceList)}">
+                                <td colspan="13" class="text-center text-secondary py-3">현재 연동된 데이터가 없습니다.</td>
+                            </tr>
+                            <tr th:each="p, stat : ${performanceList}">
+                                <td class="text-center align-middle text-secondary" th:text="${stat.count}">1</td>
+                                <td class="align-middle" th:text="${p.customerAgency != null ? p.customerAgency : '-'}">-</td>
+                                <td class="align-middle" th:text="${p.contractName != null ? p.contractName : '-'}">-</td>
+                                <td class="align-middle text-end" th:text="${p.businessAmount != null ? #numbers.formatInteger(p.businessAmount,0,'COMMA') + ' 원' : '-'}">-</td>
+                                <td class="align-middle text-center" th:text="${p.supplyType != null ? p.supplyType : '-'}">-</td>
+                                <td class="align-middle text-center" th:text="${p.paymentRate != null ? p.paymentRate + ' %' : '-'}">-</td>
+                                <td class="align-middle text-end" th:text="${p.contractAmount != null ? #numbers.formatInteger(p.contractAmount,0,'COMMA') + ' 원' : '-'}">-</td>
+                                <td class="align-middle text-center" th:text="${p.completionDate != null ? #temporals.format(p.completionDate,'yyyy-MM-dd') : '-'}">-</td>
+                                <td class="align-middle text-center" th:text="${p.businessPeriod != null ? p.businessPeriod : '-'}">-</td>
+                                <td class="align-middle text-secondary" th:text="${p.categoryL1 != null ? p.categoryL1 : '-'}">-</td>
+                                <td class="align-middle text-secondary" th:text="${p.categoryL2 != null ? p.categoryL2 : '-'}">-</td>
+                                <td class="align-middle text-secondary" th:text="${p.categoryL3 != null ? p.categoryL3 : '-'}">-</td>
+                                <td class="text-center align-middle">
+                                    <form th:action="@{|/admin/contract-list/${project.id}/performance/${p.id}/delete|}"
+                                          method="post" onsubmit="return confirm('삭제하시겠습니까?')">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 구매 정보 탭 ===== -->
+    <div th:if="${tab == 'purchase'}" class="app-profile-section">
+        <div class="app-profile-card">
+            <div class="app-profile-card-head">
+                <div class="fw-bold">구매 정보</div>
+                <button class="btn btn-sm btn-outline-dark" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#purchaseAddForm">
+                    <i class="bi bi-plus-lg"></i> 추가
+                </button>
+            </div>
+            <div class="app-profile-card-body p-0">
+
+                <!-- 등록 폼 -->
+                <div class="collapse" id="purchaseAddForm">
+                    <form th:action="@{|/admin/contract-list/${project.id}/purchase|}" method="post"
+                          class="p-3 border-bottom bg-light">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-2">
+                                <label class="form-label form-label-sm">구분</label>
+                                <input class="form-control form-control-sm" name="purchaseType">
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <label class="form-label form-label-sm">프로젝트명</label>
+                                <input class="form-control form-control-sm" name="projectName">
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <label class="form-label form-label-sm">하도급명</label>
+                                <input class="form-control form-control-sm" name="subcontractName">
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label form-label-sm">거래서명</label>
+                                <input class="form-control form-control-sm" name="vendorName">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label form-label-sm">계약체결일</label>
+                                <input class="form-control form-control-sm" type="date" name="contractDate">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label form-label-sm">계약시작일</label>
+                                <input class="form-control form-control-sm" type="date" name="contractStart">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label form-label-sm">계약종료일</label>
+                                <input class="form-control form-control-sm" type="date" name="contractEnd">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label form-label-sm">공급금액</label>
+                                <input class="form-control form-control-sm" type="number" name="supplyAmount" min="0">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label form-label-sm">부가세액</label>
+                                <input class="form-control form-control-sm" type="number" name="vatAmount" min="0">
+                            </div>
+                            <div class="col-12 col-md-2">
+                                <label class="form-label form-label-sm">합계금액</label>
+                                <input class="form-control form-control-sm" type="number" name="totalAmount" min="0">
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-2">
+                            <button type="submit" class="btn btn-sm btn-dark">등록</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                    data-bs-toggle="collapse" data-bs-target="#purchaseAddForm">취소</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 테이블 -->
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered mb-0 small">
+                        <thead class="table-light text-center">
+                            <tr>
+                                <th style="width:44px">No.</th>
+                                <th style="width:70px">구분</th>
+                                <th>프로젝트명</th>
+                                <th>하도급명</th>
+                                <th>거래서명</th>
+                                <th style="width:90px">계약체결일</th>
+                                <th style="width:90px">계약시작일</th>
+                                <th style="width:90px">계약종료일</th>
+                                <th style="width:110px">공급금액</th>
+                                <th style="width:110px">부가세액</th>
+                                <th style="width:120px">합계금액</th>
+                                <th style="width:60px">삭제</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(purchaseList)}">
+                                <td colspan="12" class="text-center text-secondary py-3">현재 연동된 데이터가 없습니다.</td>
+                            </tr>
+                            <tr th:each="pu, stat : ${purchaseList}">
+                                <td class="text-center align-middle text-secondary" th:text="${stat.count}">1</td>
+                                <td class="align-middle text-center" th:text="${pu.purchaseType != null ? pu.purchaseType : '-'}">-</td>
+                                <td class="align-middle" th:text="${pu.projectName != null ? pu.projectName : '-'}">-</td>
+                                <td class="align-middle" th:text="${pu.subcontractName != null ? pu.subcontractName : '-'}">-</td>
+                                <td class="align-middle" th:text="${pu.vendorName != null ? pu.vendorName : '-'}">-</td>
+                                <td class="align-middle text-center" th:text="${pu.contractDate != null ? #temporals.format(pu.contractDate,'yyyy-MM-dd') : '-'}">-</td>
+                                <td class="align-middle text-center" th:text="${pu.contractStart != null ? #temporals.format(pu.contractStart,'yyyy-MM-dd') : '-'}">-</td>
+                                <td class="align-middle text-center" th:text="${pu.contractEnd != null ? #temporals.format(pu.contractEnd,'yyyy-MM-dd') : '-'}">-</td>
+                                <td class="align-middle text-end" th:text="${pu.supplyAmount != null ? #numbers.formatInteger(pu.supplyAmount,0,'COMMA') + ' 원' : '-'}">-</td>
+                                <td class="align-middle text-end" th:text="${pu.vatAmount != null ? #numbers.formatInteger(pu.vatAmount,0,'COMMA') + ' 원' : '-'}">-</td>
+                                <td class="align-middle text-end fw-semibold" th:text="${pu.totalAmount != null ? #numbers.formatInteger(pu.totalAmount,0,'COMMA') + ' 원' : '-'}">-</td>
+                                <td class="text-center align-middle">
+                                    <form th:action="@{|/admin/contract-list/${project.id}/purchase/${pu.id}/delete|}"
+                                          method="post" onsubmit="return confirm('삭제하시겠습니까?')">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</section>
+</html>

@@ -36,8 +36,10 @@ public class ProjectEntity {
     private String pmEmpNo;
     private String executiveEmpNo;
     private String businessPlace;
-    private String categoryMajor;
-    private String categoryMinor;
+    private String categoryMajor;   // L1
+    private String categoryMinor;   // L2
+    private String categoryL3;      // L3
+    private Integer managementYear; // 관리년도
     private String division;
     private String department;
     private Long orgUnitId;

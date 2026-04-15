@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.sayy.Mapper.ContractPerformanceMapper">
+
+    <resultMap id="PerformanceResultMap" type="com.example.sayy.Entity.ContractPerformanceEntity">
+        <id property="id" column="id"/>
+        <result property="projectId" column="project_id"/>
+        <result property="customerAgency" column="customer_agency"/>
+        <result property="contractName" column="contract_name"/>
+        <result property="businessAmount" column="business_amount"/>
+        <result property="supplyType" column="supply_type"/>
+        <result property="paymentRate" column="payment_rate"/>
+        <result property="contractAmount" column="contract_amount"/>
+        <result property="completionDate" column="completion_date"/>
+        <result property="businessPeriod" column="business_period"/>
+        <result property="categoryL1" column="category_l1"/>
+        <result property="categoryL2" column="category_l2"/>
+        <result property="categoryL3" column="category_l3"/>
+        <result property="memo" column="memo"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="selectByProjectId" resultMap="PerformanceResultMap">
+        SELECT * FROM contract_performance WHERE project_id = #{projectId} ORDER BY id DESC
+    </select>
+
+    <select id="selectById" resultMap="PerformanceResultMap">
+        SELECT * FROM contract_performance WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.example.sayy.Entity.ContractPerformanceEntity"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO contract_performance (project_id, customer_agency, contract_name,
+                                          business_amount, supply_type, payment_rate,
+                                          contract_amount, completion_date, business_period,
+                                          category_l1, category_l2, category_l3, memo)
+        VALUES (#{projectId}, #{customerAgency}, #{contractName},
+                #{businessAmount}, #{supplyType}, #{paymentRate},
+                #{contractAmount}, #{completionDate}, #{businessPeriod},
+                #{categoryL1}, #{categoryL2}, #{categoryL3}, #{memo})
+    </insert>
+
+    <update id="update" parameterType="com.example.sayy.Entity.ContractPerformanceEntity">
+        UPDATE contract_performance SET
+            customer_agency = #{customerAgency},
+            contract_name = #{contractName},
+            business_amount = #{businessAmount},
+            supply_type = #{supplyType},
+            payment_rate = #{paymentRate},
+            contract_amount = #{contractAmount},
+            completion_date = #{completionDate},
+            business_period = #{businessPeriod},
+            category_l1 = #{categoryL1},
+            category_l2 = #{categoryL2},
+            category_l3 = #{categoryL3},
+            memo = #{memo}
+        WHERE id = #{id} AND project_id = #{projectId}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM contract_performance WHERE id = #{id} AND project_id = #{projectId}
+    </delete>
+
+</mapper>
