@@ -8,6 +8,7 @@ import com.example.sayy.Service.CompanyService;
 import com.example.sayy.Service.DaysOffService;
 import com.example.sayy.Service.EmployeeBulkImportService;
 import com.example.sayy.Service.EmployeeDocumentService;
+import com.example.sayy.Service.EmployeeExcelExportService;
 import com.example.sayy.Service.EmployeeService;
 import com.example.sayy.Service.EmployeeExcelImportService;
 import com.example.sayy.Service.EmployeeImportStore;
@@ -46,6 +47,7 @@ public class AdminController {
     private final EmployeeBulkImportService employeeBulkImportService;
     private final CareerService careerService;
     private final EmployeeDocumentService documentService;
+    private final EmployeeExcelExportService employeeExcelExportService;
 
     public AdminController(EmployeeService employeeService,
                            UserService userService,
@@ -56,7 +58,8 @@ public class AdminController {
                            EmployeeImportStore employeeImportStore,
                            EmployeeBulkImportService employeeBulkImportService,
                            CareerService careerService,
-                           EmployeeDocumentService documentService) {
+                           EmployeeDocumentService documentService,
+                           EmployeeExcelExportService employeeExcelExportService) {
         this.employeeService = employeeService;
         this.userService = userService;
         this.daysOffService = daysOffService;
@@ -67,6 +70,7 @@ public class AdminController {
         this.employeeBulkImportService = employeeBulkImportService;
         this.careerService = careerService;
         this.documentService = documentService;
+        this.employeeExcelExportService = employeeExcelExportService;
     }
 
     @GetMapping("/admin")
@@ -247,6 +251,8 @@ public class AdminController {
                                @RequestParam(value = "status", required = false) String status,
                                @RequestParam(value = "q", required = false) String q,
                                @RequestParam(value = "sort", required = false) String sort,
+                               @RequestParam(defaultValue = "1") int page,
+                               @RequestParam(defaultValue = "20") int pageSize,
                                Model model) {
         EmploymentType selectedType = null;
         if (type != null && !type.isBlank() && !"ALL".equalsIgnoreCase(type)) {
@@ -259,6 +265,11 @@ public class AdminController {
             selectedStatus = EmploymentStatus.valueOf(status.toUpperCase());
         }
 
+        long filteredTotal = employeeService.countByFilters(selectedType, selectedStatus, q);
+        int totalPages = (int) Math.ceil((double) filteredTotal / pageSize);
+        if (page < 1) page = 1;
+        if (page > totalPages && totalPages > 0) page = totalPages;
+
         model.addAttribute("selectedType", selectedType == null ? "ALL" : selectedType.name());
         model.addAttribute("selectedStatus", selectedStatus == null ? "ALL" : selectedStatus.name());
         model.addAttribute("keyword", q == null ? "" : q.trim());
@@ -270,8 +281,43 @@ public class AdminController {
         model.addAttribute("activeCount", employeeService.countByEmploymentStatus(EmploymentStatus.ACTIVE));
         model.addAttribute("leaveCount", employeeService.countByEmploymentStatus(EmploymentStatus.LEAVE));
         model.addAttribute("terminatedCount", employeeService.countByEmploymentStatus(EmploymentStatus.TERMINATED));
-        model.addAttribute("employees", employeeService.findByFilters(selectedType, selectedStatus, q, sort));
+        model.addAttribute("employees", employeeService.findByFilters(selectedType, selectedStatus, q, sort, page, pageSize));
+        model.addAttribute("filteredTotal", filteredTotal);
+        model.addAttribute("page", page);
+        model.addAttribute("pageSize", pageSize);
+        model.addAttribute("totalPages", totalPages);
         return "admin-employees";
+    }
+
+    @GetMapping("/admin/employees/export")
+    @ResponseBody
+    public ResponseEntity<byte[]> exportEmployees(
+            @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "q", required = false) String q,
+            @RequestParam(value = "sort", required = false) String sort) {
+        try {
+            EmploymentType selectedType = null;
+            if (type != null && !type.isBlank() && !"ALL".equalsIgnoreCase(type)) {
+                selectedType = EmploymentType.valueOf(type.toUpperCase());
+            }
+            EmploymentStatus selectedStatus = null;
+            if (status != null && !status.isBlank() && !"ALL".equalsIgnoreCase(status)) {
+                selectedStatus = EmploymentStatus.valueOf(status.toUpperCase());
+            }
+            var employees = employeeService.findByFilters(selectedType, selectedStatus, q, sort, 1, Integer.MAX_VALUE);
+            byte[] data = employeeExcelExportService.export(employees);
+
+            String filename = java.net.URLEncoder.encode("인사정보_" + java.time.LocalDate.now() + ".xlsx",
+                    java.nio.charset.StandardCharsets.UTF_8).replace("+", "%20");
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + filename)
+                    .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .body(data);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/admin/employees/new")
@@ -306,6 +352,7 @@ public class AdminController {
         model.addAttribute("positionOptions", List.of("담당", "대리", "과장", "차장", "부장", "임원"));
         model.addAttribute("titleOptions", List.of("팀원", "팀장", "파트장", "실장", "본부장"));
         model.addAttribute("jobOptions", List.of("개발", "기획", "디자인", "마케팅", "영업", "인사", "재무", "운영"));
+        model.addAttribute("techGradeOptions", List.of("특급", "고급", "중급", "초급"));
         return "admin-employee-hr-edit";
     }
 
@@ -314,6 +361,7 @@ public class AdminController {
                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hireDate,
                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate groupHireDate,
                                    @RequestParam(required = false) String positionName,
+                                   @RequestParam(required = false) String techGrade,
                                    @RequestParam(required = false) String jobNames,
                                    @RequestParam(required = false) String hrMemo,
                                    @RequestParam(required = false, name = "orgUnitIds") List<String> orgUnitIds,
@@ -326,6 +374,7 @@ public class AdminController {
                     hireDate,
                     groupHireDate,
                     positionName,
+                    techGrade,
                     jobNames,
                     hrMemo,
                     parseLongList(orgUnitIds),
@@ -619,6 +668,7 @@ public class AdminController {
             return "redirect:/admin/employees/import";
         }
     }
+
 
     @PostMapping("/admin/employees")
     public String createEmployee(@RequestParam String empNo,

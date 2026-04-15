@@ -80,6 +80,7 @@ public class EmployeeEntity {
 
     // 직위/직무(직무는 콤마(,) 구분 문자열로 저장)
     private String positionName;
+    private String techGrade;       // 기술등급 (특급/고급/중급/초급 등)
     private String departmentName;
     private String jobNames;
 

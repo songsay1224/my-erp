@@ -24,6 +24,18 @@ public class EmployeeImportRowDTO {
     private String username; // required
     private String gender;
 
+    // 확장 필드 (새 임포트 형식)
+    private String academy;         // 출신 아카데미
+    private String division;        // 사업부문(구분)
+    private String jobGroup;        // 직군
+    private String jobType;         // 직종
+    private String techGrade;       // 기술등급
+    private String schoolName;      // 학교명
+    private String major;           // 전공
+    private String graduationYear;  // 졸업년도
+    private String degree;          // 학위
+    private String certificates;    // 보유 자격증 (원문)
+
     private final List<String> errors = new ArrayList<>();
 
     public boolean isValid() {
@@ -185,6 +197,36 @@ public class EmployeeImportRowDTO {
     public void setGender(String gender) {
         this.gender = gender;
     }
+
+    public String getAcademy() { return academy; }
+    public void setAcademy(String academy) { this.academy = academy; }
+
+    public String getDivision() { return division; }
+    public void setDivision(String division) { this.division = division; }
+
+    public String getJobGroup() { return jobGroup; }
+    public void setJobGroup(String jobGroup) { this.jobGroup = jobGroup; }
+
+    public String getJobType() { return jobType; }
+    public void setJobType(String jobType) { this.jobType = jobType; }
+
+    public String getTechGrade() { return techGrade; }
+    public void setTechGrade(String techGrade) { this.techGrade = techGrade; }
+
+    public String getSchoolName() { return schoolName; }
+    public void setSchoolName(String schoolName) { this.schoolName = schoolName; }
+
+    public String getMajor() { return major; }
+    public void setMajor(String major) { this.major = major; }
+
+    public String getGraduationYear() { return graduationYear; }
+    public void setGraduationYear(String graduationYear) { this.graduationYear = graduationYear; }
+
+    public String getDegree() { return degree; }
+    public void setDegree(String degree) { this.degree = degree; }
+
+    public String getCertificates() { return certificates; }
+    public void setCertificates(String certificates) { this.certificates = certificates; }
 
     public void addError(String message) {
         if (message != null && !message.isBlank()) {

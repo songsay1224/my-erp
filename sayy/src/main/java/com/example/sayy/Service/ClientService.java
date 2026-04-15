@@ -6,6 +6,7 @@ import com.example.sayy.Mapper.ClientMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -17,9 +18,20 @@ public class ClientService {
         this.clientMapper = clientMapper;
     }
 
-    public List<ClientEntity> getClients(String status, String keyword) {
+    public List<ClientEntity> getClients(String status, String clientType, String keyword, int page, int pageSize) {
+        int offset = (page - 1) * pageSize;
         return clientMapper.selectAll(
                 blank(status) ? null : status,
+                blank(clientType) ? null : clientType,
+                blank(keyword) ? null : keyword.trim(),
+                pageSize, offset
+        );
+    }
+
+    public long countClients(String status, String clientType, String keyword) {
+        return clientMapper.countAll(
+                blank(status) ? null : status,
+                blank(clientType) ? null : clientType,
                 blank(keyword) ? null : keyword.trim()
         );
     }
@@ -32,52 +44,29 @@ public class ClientService {
     }
 
     @Transactional
-    public Long createClient(String name, String businessRegNo, String corporateRegNo,
-                             String ceoName, String industry, String phone, String email,
-                             String zipCode, String address, String addressDetail,
-                             String status, String memo) {
-        if (blank(name)) throw new IllegalArgumentException("거래처명은 필수입니다.");
-        ClientEntity c = new ClientEntity();
-        c.setName(name.trim());
-        c.setBusinessRegNo(normalizeBusinessRegNo(businessRegNo));
-        c.setCorporateRegNo(normalizeCorporateRegNo(corporateRegNo));
-        c.setCeoName(trim(ceoName));
-        c.setIndustry(trim(industry));
-        c.setPhone(trim(phone));
-        c.setEmail(trim(email));
-        c.setZipCode(trim(zipCode));
-        c.setAddress(trim(address));
-        c.setAddressDetail(trim(addressDetail));
-        c.setStatus(blank(status) ? "ACTIVE" : status.trim());
-        c.setMemo(trim(memo));
+    public Long createClient(ClientEntity c) {
+        if (blank(c.getName())) throw new IllegalArgumentException("거래처명은 필수입니다.");
+        c.setName(c.getName().trim());
+        c.setBusinessRegNo(normalizeBusinessRegNo(c.getBusinessRegNo()));
+        c.setCorporateRegNo(normalizeCorporateRegNo(c.getCorporateRegNo()));
+        if (blank(c.getClientType())) c.setClientType("매출");
+        if (blank(c.getStatus())) c.setStatus("ACTIVE");
         clientMapper.insert(c);
         return c.getId();
     }
 
     @Transactional
-    public void updateClient(Long id, String name, String businessRegNo, String corporateRegNo,
-                             String ceoName, String industry, String phone, String email,
-                             String zipCode, String address, String addressDetail,
-                             String status, String memo) {
-        if (blank(name)) throw new IllegalArgumentException("거래처명은 필수입니다.");
-        ClientEntity c = new ClientEntity();
+    public void updateClient(Long id, ClientEntity c) {
+        if (blank(c.getName())) throw new IllegalArgumentException("거래처명은 필수입니다.");
         c.setId(id);
-        c.setName(name.trim());
-        c.setBusinessRegNo(normalizeBusinessRegNo(businessRegNo));
-        c.setCorporateRegNo(normalizeCorporateRegNo(corporateRegNo));
-        c.setCeoName(trim(ceoName));
-        c.setIndustry(trim(industry));
-        c.setPhone(trim(phone));
-        c.setEmail(trim(email));
-        c.setZipCode(trim(zipCode));
-        c.setAddress(trim(address));
-        c.setAddressDetail(trim(addressDetail));
-        c.setStatus(blank(status) ? "ACTIVE" : status.trim());
-        c.setMemo(trim(memo));
+        c.setName(c.getName().trim());
+        c.setBusinessRegNo(normalizeBusinessRegNo(c.getBusinessRegNo()));
+        c.setCorporateRegNo(normalizeCorporateRegNo(c.getCorporateRegNo()));
+        if (blank(c.getClientType())) c.setClientType("매출");
+        if (blank(c.getStatus())) c.setStatus("ACTIVE");
         clientMapper.update(c);
     }
 
-    /** 사업자등록번호: 숫자 10자리 → XXX-XX-XXXXX */
     private static String normalizeBusinessRegNo(String v) {
         if (blank(v)) return null;
         String d = v.replaceAll("[^0-9]", "");
@@ -85,7 +74,6 @@ public class ClientService {
         return v.trim();
     }
 
-    /** 법인등록번호: 숫자 13자리 → XXXXXX-XXXXXXX */
     private static String normalizeCorporateRegNo(String v) {
         if (blank(v)) return null;
         String d = v.replaceAll("[^0-9]", "");
@@ -94,11 +82,13 @@ public class ClientService {
     }
 
     @Transactional
-    public void deleteClient(Long id) {
-        clientMapper.deleteById(id);
-    }
+    public void deleteClient(Long id) { clientMapper.deleteById(id); }
 
-    // ===== 담당자 =====
+    @Transactional
+    public void deleteClients(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return;
+        clientMapper.deleteByIds(ids);
+    }
 
     @Transactional
     public void addContact(Long clientId, String name, String department, String position,

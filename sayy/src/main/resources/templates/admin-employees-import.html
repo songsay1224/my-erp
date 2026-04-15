@@ -25,9 +25,9 @@
                 <div class="col-12 col-md-8">
                     <input class="form-control" type="file" name="file" accept=".xlsx,.csv" required>
                     <div class="text-secondary small mt-1">
-                        `xlsx` 템플릿 필수 컬럼: <span class="fw-semibold">emp_no, name, employment_type</span>
-                        / `csv` 기존 파일 헤더 예: <span class="fw-semibold">Employee Number, Employee Name, 상태, Title, Start date, Identification Number</span>
-                        <span class="text-secondary"> / 입사일로 근속년수, 주민등록번호로 생일/나이가 자동 반영됩니다. username은 선택입니다.</span>
+                        필수 컬럼: <span class="fw-semibold">사번, 성명, 입사일</span>
+                        · 선택 컬럼: 출신아카데미, 상태, 직위, 사업부문, 직군, 직종, 기술등급, 학교명, 전공, 졸업년도, 학위, 보유자격증
+                        <br>입사일로 근속년수가 자동 계산됩니다. 직위 앞 번호(예: <code>1.부장</code>)는 자동 제거됩니다.
                     </div>
                 </div>
                 <div class="col-12 col-md-4 d-grid">
@@ -69,37 +69,47 @@
                     <table class="table table-sm align-middle mb-0 app-table">
                         <thead>
                         <tr class="text-secondary">
-                            <th style="width: 70px;">행</th>
-                            <th style="width: 140px;">사번(emp_no)</th>
-                            <th style="width: 140px;">이름</th>
-                            <th style="width: 100px;">상태</th>
-                            <th style="width: 120px;">고용형태</th>
-                            <th style="width: 130px;">입사일</th>
-                            <th style="width: 90px;">근속년수</th>
-                            <th style="width: 120px;">생일</th>
-                            <th style="width: 70px;">나이</th>
-                            <th style="width: 120px;">직위</th>
-                            <th style="width: 120px;">username</th>
+                            <th style="width:50px;">행</th>
+                            <th style="width:110px;">사번</th>
+                            <th style="width:90px;">성명</th>
+                            <th style="width:80px;">상태</th>
+                            <th style="width:115px;">입사일</th>
+                            <th style="width:75px;">근속년수</th>
+                            <th style="width:80px;">직위</th>
+                            <th style="width:80px;">기술등급</th>
+                            <th style="width:100px;">사업부문</th>
+                            <th style="width:80px;">직군</th>
+                            <th style="width:90px;">직종</th>
+                            <th style="width:120px;">학교명</th>
+                            <th style="width:60px;">학위</th>
+                            <th>보유자격증</th>
                             <th>오류</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:each="r : ${previewRows}">
-                            <td th:text="${r.rowNum}">2</td>
-                            <td class="fw-semibold" th:text="${r.empNo}">20260001</td>
-                            <td th:text="${r.name}">홍길동</td>
-                            <td><span class="badge text-bg-light" th:text="${r.employmentStatus}">ACTIVE</span></td>
-                            <td><span class="badge text-bg-secondary" th:text="${r.employmentType}">REGULAR</span></td>
-                            <td th:text="${r.hireDate}">2026-03-25</td>
-                            <td th:text="${r.yearsOfService}">0</td>
-                            <td th:text="${r.birthDate}">1996-01-01</td>
-                            <td th:text="${r.age}">30</td>
-                            <td th:text="${r.positionName}">대리</td>
-                            <td th:text="${r.username}">honggildong</td>
+                        <tr th:each="r : ${previewRows}" th:classappend="${!r.valid} ? 'table-danger' : ''">
+                            <td th:text="${r.rowNum}"></td>
+                            <td class="fw-semibold" th:text="${r.empNo}"></td>
+                            <td th:text="${r.name}"></td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${r.employmentStatus == 'ACTIVE'} ? 'text-bg-success' : (${r.employmentStatus == 'LEAVE'} ? 'text-bg-warning' : 'text-bg-secondary')"
+                                      th:text="${r.employmentStatus == 'ACTIVE'} ? '재직' : (${r.employmentStatus == 'LEAVE'} ? '휴직' : '퇴직')"></span>
+                            </td>
+                            <td th:text="${r.hireDate}"></td>
+                            <td th:text="${r.yearsOfService}"></td>
+                            <td th:text="${r.positionName}"></td>
+                            <td th:text="${r.techGrade}"></td>
+                            <td th:text="${r.division}"></td>
+                            <td th:text="${r.jobGroup}"></td>
+                            <td th:text="${r.jobType}"></td>
+                            <td th:text="${r.schoolName}"></td>
+                            <td th:text="${r.degree}"></td>
+                            <td class="small" th:text="${r.certificates}"></td>
                             <td>
                                 <span th:if="${r.valid}" class="badge text-bg-success">OK</span>
                                 <div th:if="${!r.valid}" class="text-danger small">
-                                    <div th:each="e : ${r.errors}" th:text="${e}">error</div>
+                                    <div th:each="e : ${r.errors}" th:text="${e}"></div>
                                 </div>
                             </td>
                         </tr>
@@ -111,4 +121,3 @@
     </div>
 </section>
 </html>
-

@@ -17,7 +17,13 @@ public interface EmployeeMapper {
     List<EmployeeEntity> selectByFiltersWithUser(@Param("employmentType") String employmentType,
                                                  @Param("employmentStatus") String employmentStatus,
                                                  @Param("keyword") String keyword,
-                                                 @Param("sort") String sort);
+                                                 @Param("sort") String sort,
+                                                 @Param("limit") Integer limit,
+                                                 @Param("offset") Integer offset);
+
+    long countByFilters(@Param("employmentType") String employmentType,
+                        @Param("employmentStatus") String employmentStatus,
+                        @Param("keyword") String keyword);
 
     long countAll();
 

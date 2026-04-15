@@ -34,7 +34,7 @@ public class EmployeeService {
     }
 
     public List<EmployeeEntity> findAllActive() {
-        return employeeMapper.selectByFiltersWithUser(null, EmploymentStatus.ACTIVE.name(), null, null);
+        return employeeMapper.selectByFiltersWithUser(null, EmploymentStatus.ACTIVE.name(), null, null, Integer.MAX_VALUE, 0);
     }
 
     public List<EmployeeEntity> findByEmploymentType(EmploymentType employmentType) {
@@ -44,12 +44,27 @@ public class EmployeeService {
     public List<EmployeeEntity> findByFilters(EmploymentType employmentType,
                                               EmploymentStatus employmentStatus,
                                               String keyword,
-                                              String sort) {
+                                              String sort,
+                                              int page,
+                                              int pageSize) {
+        int offset = (page - 1) * pageSize;
         return employeeMapper.selectByFiltersWithUser(
                 employmentType == null ? null : employmentType.name(),
                 employmentStatus == null ? null : employmentStatus.name(),
                 normalizeKeyword(keyword),
-                normalizeSort(sort)
+                normalizeSort(sort),
+                pageSize,
+                offset
+        );
+    }
+
+    public long countByFilters(EmploymentType employmentType,
+                               EmploymentStatus employmentStatus,
+                               String keyword) {
+        return employeeMapper.countByFilters(
+                employmentType == null ? null : employmentType.name(),
+                employmentStatus == null ? null : employmentStatus.name(),
+                normalizeKeyword(keyword)
         );
     }
 
@@ -250,6 +265,7 @@ public class EmployeeService {
                                 LocalDate hireDate,
                                 LocalDate groupHireDate,
                                 String positionName,
+                                String techGrade,
                                 String jobNames,
                                 String hrMemo,
                                 List<Long> orgUnitIds,
@@ -269,6 +285,7 @@ public class EmployeeService {
         e.setHireDate(hireDate);
         e.setGroupHireDate(groupHireDate);
         e.setPositionName(normalizeText(positionName, 100));
+        e.setTechGrade(normalizeText(techGrade, 50));
         e.setJobNames(normalizeJobNames(jobNames, 255));
         e.setHrMemo(normalizeText(hrMemo, 1000));
 

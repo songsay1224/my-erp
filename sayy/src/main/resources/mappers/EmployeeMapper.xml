@@ -17,6 +17,7 @@
         <result property="hireDate" column="hire_date"/>
         <result property="groupHireDate" column="group_hire_date"/>
         <result property="positionName" column="position_name"/>
+        <result property="techGrade" column="tech_grade"/>
         <result property="departmentName" column="department_name"/>
         <result property="jobNames" column="job_names"/>
         <result property="identificationNumber" column="identification_number"/>
@@ -66,6 +67,7 @@
         <result property="hireDate" column="hire_date"/>
         <result property="groupHireDate" column="group_hire_date"/>
         <result property="positionName" column="position_name"/>
+        <result property="techGrade" column="tech_grade"/>
         <result property="departmentName" column="department_name"/>
         <result property="jobNames" column="job_names"/>
         <result property="identificationNumber" column="identification_number"/>
@@ -96,7 +98,7 @@
 
     <sql id="employeeColumns">
         e.emp_no, e.login_username, e.name, e.employment_type, e.employment_status, e.four_insured, e.tax_scheme, e.contract_end_date,
-        e.hire_date, e.group_hire_date, e.position_name,
+        e.hire_date, e.group_hire_date, e.position_name, e.tech_grade,
         (
             SELECT ou.name
             FROM employee_org_assignments eoa
@@ -198,6 +200,33 @@
                 ORDER BY e.created_at DESC
             </otherwise>
         </choose>
+        <if test="limit != null">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
+    </select>
+
+    <select id="countByFilters" resultType="long">
+        SELECT COUNT(1) FROM employees e
+        WHERE 1 = 1
+        <if test="employmentType != null and employmentType != ''">
+            AND e.employment_type = #{employmentType}
+        </if>
+        <if test="employmentStatus != null and employmentStatus != ''">
+            <choose>
+                <when test="employmentStatus == 'ACTIVE'">
+                    AND (e.employment_status = #{employmentStatus} OR e.employment_status IS NULL)
+                </when>
+                <otherwise>
+                    AND e.employment_status = #{employmentStatus}
+                </otherwise>
+            </choose>
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (
+                e.emp_no LIKE CONCAT('%', #{keyword}, '%')
+                OR e.name LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
     </select>
 
     <select id="countAll" resultType="long">
@@ -256,6 +285,7 @@
             hire_date = #{hireDate},
             group_hire_date = #{groupHireDate},
             position_name = #{positionName},
+            tech_grade = #{techGrade},
             job_names = #{jobNames},
             hr_memo = #{hrMemo}
         WHERE emp_no = #{empNo}

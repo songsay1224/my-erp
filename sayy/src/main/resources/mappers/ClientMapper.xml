@@ -5,18 +5,29 @@
 
     <resultMap id="ClientResultMap" type="com.example.sayy.Entity.ClientEntity">
         <id property="id" column="id"/>
+        <result property="clientType" column="client_type"/>
         <result property="name" column="name"/>
         <result property="businessRegNo" column="business_reg_no"/>
         <result property="corporateRegNo" column="corporate_reg_no"/>
         <result property="ceoName" column="ceo_name"/>
+        <result property="openedDate" column="opened_date"/>
+        <result property="businessType" column="business_type"/>
+        <result property="businessItem" column="business_item"/>
         <result property="industry" column="industry"/>
         <result property="phone" column="phone"/>
+        <result property="homepage" column="homepage"/>
         <result property="email" column="email"/>
         <result property="zipCode" column="zip_code"/>
         <result property="address" column="address"/>
         <result property="addressDetail" column="address_detail"/>
+        <result property="region" column="region"/>
         <result property="status" column="status"/>
+        <result property="bankName" column="bank_name"/>
+        <result property="bankAccount" column="bank_account"/>
+        <result property="bankHolder" column="bank_holder"/>
+        <result property="bankStamp" column="bank_stamp"/>
         <result property="memo" column="memo"/>
+        <result property="attachmentPath" column="attachment_path"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
@@ -34,17 +45,30 @@
         <result property="createdAt" column="created_at"/>
     </resultMap>
 
-    <select id="selectAll" resultMap="ClientResultMap">
-        SELECT * FROM clients
+    <sql id="whereClause">
         <where>
             <if test="status != null and status != ''">AND status = #{status}</if>
+            <if test="clientType != null and clientType != ''">AND client_type = #{clientType}</if>
             <if test="keyword != null and keyword != ''">
                 AND (name LIKE CONCAT('%', #{keyword}, '%')
                   OR ceo_name LIKE CONCAT('%', #{keyword}, '%')
                   OR business_reg_no LIKE CONCAT('%', #{keyword}, '%'))
             </if>
         </where>
+    </sql>
+
+    <select id="selectAll" resultMap="ClientResultMap">
+        SELECT * FROM clients
+        <include refid="whereClause"/>
         ORDER BY updated_at DESC
+        <if test="limit != null">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(1) FROM clients
+        <include refid="whereClause"/>
     </select>
 
     <select id="selectById" resultMap="ClientResultMap">
@@ -52,22 +76,37 @@
     </select>
 
     <insert id="insert" parameterType="com.example.sayy.Entity.ClientEntity" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO clients (name, business_reg_no, corporate_reg_no, ceo_name, industry, phone, email,
-                             zip_code, address, address_detail, status, memo)
-        VALUES (#{name}, #{businessRegNo}, #{corporateRegNo}, #{ceoName}, #{industry}, #{phone}, #{email},
-                #{zipCode}, #{address}, #{addressDetail}, #{status}, #{memo})
+        INSERT INTO clients (client_type, name, business_reg_no, corporate_reg_no, ceo_name,
+                             opened_date, business_type, business_item, industry,
+                             phone, homepage, email, zip_code, address, address_detail, region,
+                             status, bank_name, bank_account, bank_holder, bank_stamp, memo, attachment_path)
+        VALUES (#{clientType}, #{name}, #{businessRegNo}, #{corporateRegNo}, #{ceoName},
+                #{openedDate}, #{businessType}, #{businessItem}, #{industry},
+                #{phone}, #{homepage}, #{email}, #{zipCode}, #{address}, #{addressDetail}, #{region},
+                #{status}, #{bankName}, #{bankAccount}, #{bankHolder}, #{bankStamp}, #{memo}, #{attachmentPath})
     </insert>
 
     <update id="update" parameterType="com.example.sayy.Entity.ClientEntity">
         UPDATE clients SET
-            name = #{name}, business_reg_no = #{businessRegNo}, corporate_reg_no = #{corporateRegNo}, ceo_name = #{ceoName},
-            industry = #{industry}, phone = #{phone}, email = #{email},
+            client_type = #{clientType}, name = #{name},
+            business_reg_no = #{businessRegNo}, corporate_reg_no = #{corporateRegNo},
+            ceo_name = #{ceoName}, opened_date = #{openedDate},
+            business_type = #{businessType}, business_item = #{businessItem},
+            industry = #{industry}, phone = #{phone}, homepage = #{homepage}, email = #{email},
             zip_code = #{zipCode}, address = #{address}, address_detail = #{addressDetail},
-            status = #{status}, memo = #{memo}
+            region = #{region}, status = #{status},
+            bank_name = #{bankName}, bank_account = #{bankAccount},
+            bank_holder = #{bankHolder}, bank_stamp = #{bankStamp},
+            memo = #{memo}, attachment_path = #{attachmentPath}
         WHERE id = #{id}
     </update>
 
     <delete id="deleteById">DELETE FROM clients WHERE id = #{id}</delete>
+
+    <delete id="deleteByIds">
+        DELETE FROM clients WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </delete>
 
     <select id="selectContactsByClientId" resultMap="ContactResultMap">
         SELECT * FROM client_contacts WHERE client_id = #{clientId}

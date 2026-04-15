@@ -33,115 +33,133 @@ import org.slf4j.LoggerFactory;
 @Service
 public class EmployeeExcelImportService {
     private static final Logger log = LoggerFactory.getLogger(EmployeeExcelImportService.class);
+    // 새 임포트 템플릿 헤더 (이미지 형식 기준)
     public static final List<String> TEMPLATE_HEADERS = List.of(
-            "emp_no",
-            "name",
-            "employment_type",
-            "employment_status",
-            "four_insured",
-            "tax_scheme",
-            "hire_date",
-            "group_hire_date",
-            "position_name",
-            "identification_number",
-            "email",
-            "birth_date",
-            "termination_date",
-            "contract_end_date",
-            "username"
+            "사번",
+            "성명",
+            "입사일",
+            "출신아카데미",
+            "상태",
+            "직위",
+            "사업부문",
+            "직군",
+            "직종",
+            "기술등급",
+            "학교명",
+            "전공",
+            "졸업년도",
+            "학위",
+            "보유자격증"
     );
 
-    private static final List<String> REQUIRED_XLSX_HEADERS = List.of("emp_no", "name", "employment_type");
+    // readHeaderMap이 alias 변환 후 canonical key로 저장하므로 변환된 키로 체크
+    private static final List<String> REQUIRED_XLSX_HEADERS = List.of("emp_no", "name", "hire_date");
 
     private static final Map<String, String> HEADER_ALIASES = Map.ofEntries(
-            Map.entry("employee number", "emp_no"),
+            // 사번
             Map.entry("사번", "emp_no"),
             Map.entry("사원번호", "emp_no"),
             Map.entry("직원번호", "emp_no"),
-            Map.entry("empno", "emp_no"),
             Map.entry("emp_no", "emp_no"),
+            Map.entry("empno", "emp_no"),
+            Map.entry("employee number", "emp_no"),
 
-            Map.entry("employee name", "name"),
-            Map.entry("이름", "name"),
+            // 성명/이름
             Map.entry("성명", "name"),
+            Map.entry("이름", "name"),
             Map.entry("name", "name"),
+            Map.entry("employee name", "name"),
 
-            Map.entry("status", "employment_status"),
+            // 입사일
+            Map.entry("입사일", "hire_date"),
+            Map.entry("hire_date", "hire_date"),
+            Map.entry("hiredate", "hire_date"),
+            Map.entry("start date", "hire_date"),
+
+            // 출신아카데미
+            Map.entry("출신아카데미", "academy"),
+            Map.entry("출신 아카데미", "academy"),
+            Map.entry("academy", "academy"),
+
+            // 상태
             Map.entry("상태", "employment_status"),
             Map.entry("재직상태", "employment_status"),
-            Map.entry("employmentstatus", "employment_status"),
             Map.entry("employment_status", "employment_status"),
+            Map.entry("employmentstatus", "employment_status"),
+            Map.entry("status", "employment_status"),
 
-            Map.entry("title", "position_name"),
+            // 직위
             Map.entry("직위", "position_name"),
             Map.entry("직급", "position_name"),
-            Map.entry("position", "position_name"),
             Map.entry("position_name", "position_name"),
+            Map.entry("position", "position_name"),
+            Map.entry("title", "position_name"),
 
-            Map.entry("identification number", "identification_number"),
-            Map.entry("identificationnumber", "identification_number"),
-            Map.entry("identification_number", "identification_number"),
-            Map.entry("주민등록번호", "identification_number"),
-            Map.entry("주민번호", "identification_number"),
+            // 사업부문/구분
+            Map.entry("사업부문", "division"),
+            Map.entry("구분", "division"),
+            Map.entry("division", "division"),
 
-            Map.entry("email", "email"),
-            Map.entry("이메일", "email"),
-            Map.entry("메일", "email"),
+            // 직군
+            Map.entry("직군", "job_group"),
+            Map.entry("job_group", "job_group"),
+            Map.entry("jobgroup", "job_group"),
 
-            Map.entry("age", "age"),
-            Map.entry("나이", "age"),
+            // 직종
+            Map.entry("직종", "job_type"),
+            Map.entry("job_type", "job_type"),
+            Map.entry("jobtype", "job_type"),
 
-            Map.entry("years", "years_of_service"),
-            Map.entry("yearsofservice", "years_of_service"),
-            Map.entry("years_of_service", "years_of_service"),
-            Map.entry("근속년수", "years_of_service"),
-            Map.entry("근속연수", "years_of_service"),
+            // 기술등급
+            Map.entry("기술등급", "tech_grade"),
+            Map.entry("tech_grade", "tech_grade"),
+            Map.entry("techgrade", "tech_grade"),
 
-            Map.entry("birthday", "birth_date"),
-            Map.entry("birthdate", "birth_date"),
-            Map.entry("birth_date", "birth_date"),
-            Map.entry("생년월일", "birth_date"),
+            // 학교명
+            Map.entry("학교명", "school_name"),
+            Map.entry("school_name", "school_name"),
+            Map.entry("schoolname", "school_name"),
 
-            Map.entry("start date", "hire_date"),
-            Map.entry("startdate", "hire_date"),
-            Map.entry("hiredate", "hire_date"),
-            Map.entry("hire_date", "hire_date"),
-            Map.entry("입사일", "hire_date"),
+            // 전공
+            Map.entry("전공", "major"),
+            Map.entry("major", "major"),
 
-            Map.entry("group hire date", "group_hire_date"),
-            Map.entry("grouphiredate", "group_hire_date"),
-            Map.entry("group_hire_date", "group_hire_date"),
-            Map.entry("그룹입사일", "group_hire_date"),
+            // 졸업년도
+            Map.entry("졸업년도", "graduation_year"),
+            Map.entry("graduation_year", "graduation_year"),
+            Map.entry("graduationyear", "graduation_year"),
 
-            Map.entry("end date", "termination_date"),
-            Map.entry("enddate", "termination_date"),
-            Map.entry("terminationdate", "termination_date"),
-            Map.entry("termination_date", "termination_date"),
-            Map.entry("퇴사일", "termination_date"),
+            // 학위
+            Map.entry("학위", "degree"),
+            Map.entry("degree", "degree"),
 
+            // 보유자격증
+            Map.entry("보유자격증", "certificates"),
+            Map.entry("보유 자격증", "certificates"),
+            Map.entry("certificates", "certificates"),
+
+            // 하위호환: 기존 형식도 인식
+            Map.entry("employment_type", "employment_type"),
             Map.entry("고용형태", "employment_type"),
             Map.entry("employmenttype", "employment_type"),
-            Map.entry("employment_type", "employment_type"),
-
-            Map.entry("4대보험", "four_insured"),
-            Map.entry("4대 보험", "four_insured"),
-            Map.entry("fourinsured", "four_insured"),
             Map.entry("four_insured", "four_insured"),
-
-            Map.entry("세금", "tax_scheme"),
-            Map.entry("세금방식", "tax_scheme"),
-            Map.entry("taxscheme", "tax_scheme"),
+            Map.entry("4대보험", "four_insured"),
             Map.entry("tax_scheme", "tax_scheme"),
-
-            Map.entry("계약종료일", "contract_end_date"),
-            Map.entry("contractenddate", "contract_end_date"),
+            Map.entry("세금", "tax_scheme"),
+            Map.entry("group_hire_date", "group_hire_date"),
+            Map.entry("그룹입사일", "group_hire_date"),
+            Map.entry("termination_date", "termination_date"),
+            Map.entry("퇴사일", "termination_date"),
             Map.entry("contract_end_date", "contract_end_date"),
-
-            Map.entry("아이디", "username"),
-            Map.entry("계정", "username"),
+            Map.entry("계약종료일", "contract_end_date"),
+            Map.entry("identification_number", "identification_number"),
+            Map.entry("주민등록번호", "identification_number"),
+            Map.entry("email", "email"),
+            Map.entry("이메일", "email"),
             Map.entry("username", "username"),
-            Map.entry("loginid", "username"),
-            Map.entry("로그인아이디", "username")
+            Map.entry("아이디", "username"),
+            Map.entry("birth_date", "birth_date"),
+            Map.entry("생년월일", "birth_date")
     );
 
     private final EmployeeMapper employeeMapper;
@@ -154,61 +172,75 @@ public class EmployeeExcelImportService {
 
     public byte[] generateTemplateXlsx() {
         try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            Sheet sheet = wb.createSheet("employees");
+            Sheet sheet = wb.createSheet("인사정보");
             Sheet listSheet = wb.createSheet("_lists");
 
-            Row header = sheet.createRow(0);
+            // 헤더 스타일
             CellStyle headerStyle = wb.createCellStyle();
+            headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setBorderBottom(BorderStyle.THIN);
             Font font = wb.createFont();
             font.setBold(true);
             headerStyle.setFont(font);
 
+            // 필수 컬럼 강조 스타일
+            CellStyle requiredStyle = wb.createCellStyle();
+            requiredStyle.cloneStyleFrom(headerStyle);
+            requiredStyle.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
+            requiredStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+            Row header = sheet.createRow(0);
+            header.setHeightInPoints(20);
+            int[] colWidths = {14, 12, 14, 16, 10, 10, 16, 12, 14, 12, 18, 14, 12, 10, 24};
             for (int i = 0; i < TEMPLATE_HEADERS.size(); i++) {
                 Cell c = header.createCell(i);
                 c.setCellValue(TEMPLATE_HEADERS.get(i));
-                c.setCellStyle(headerStyle);
-                sheet.setColumnWidth(i, 18 * 256);
+                // 사번·성명·입사일은 필수 표시
+                c.setCellStyle(i < 3 ? requiredStyle : headerStyle);
+                sheet.setColumnWidth(i, colWidths[i] * 256);
             }
-
             sheet.createFreezePane(0, 1);
 
+            // 드롭다운 목록 시트
+            int listCol = 0;
+            String statusList = createNamedList(wb, listSheet, listCol++,
+                    List.of("재직", "휴직", "퇴사"), "StatusList");
+            String positionList = createNamedList(wb, listSheet, listCol++,
+                    List.of("담당", "대리", "과장", "차장", "부장", "이사", "사장"), "PositionList");
+            String techGradeList = createNamedList(wb, listSheet, listCol++,
+                    List.of("특급", "고급", "중급", "초급"), "TechGradeList");
+            String degreeList = createNamedList(wb, listSheet, listCol++,
+                    List.of("고등학교졸업", "전문학사", "학사", "석사", "박사"), "DegreeList");
+
+            // 예시 데이터 행
             CellStyle dateStyle = wb.createCellStyle();
             short df = wb.createDataFormat().getFormat("yyyy-mm-dd");
             dateStyle.setDataFormat(df);
 
-            int listCol = 0;
-            String employmentTypeList = createNamedList(wb, listSheet, listCol++,
-                    List.of("정규직", "계약직", "프리랜서"), "EmploymentTypeList");
-            String employmentStatusList = createNamedList(wb, listSheet, listCol++,
-                    List.of("재직", "휴직", "퇴사"), "EmploymentStatusList");
-            String fourInsuredList = createNamedList(wb, listSheet, listCol++,
-                    List.of("가입", "미가입"), "FourInsuredList");
-            String taxSchemeList = createNamedList(wb, listSheet, listCol++,
-                    List.of("근로소득(원천징수)", "사업소득(3.3%)"), "TaxSchemeList");
-
             Row ex = sheet.createRow(1);
-            ex.createCell(0).setCellValue("20260001");
-            ex.createCell(1).setCellValue("홍길동");
-            ex.createCell(2).setCellValue("정규직");
-            ex.createCell(3).setCellValue("재직");
-            ex.createCell(4).setCellValue("가입");
-            ex.createCell(5).setCellValue("근로소득(원천징수)");
-            createDateCell(ex, 6, "2026-03-25", dateStyle);
-            createDateCell(ex, 7, "2026-03-25", dateStyle);
-            ex.createCell(8).setCellValue("대리");
-            ex.createCell(9).setCellValue("960101-1******");
-            ex.createCell(10).setCellValue("hong@example.com");
-            createDateCell(ex, 11, "", dateStyle);
-            createDateCell(ex, 12, "", dateStyle);
-            createDateCell(ex, 13, "", dateStyle);
-            ex.createCell(14).setCellValue("honggildong");
+            ex.createCell(0).setCellValue("20260001");    // 사번
+            ex.createCell(1).setCellValue("홍길동");       // 성명
+            createDateCell(ex, 2, "2026-03-25", dateStyle); // 입사일
+            ex.createCell(3).setCellValue("");             // 출신아카데미
+            ex.createCell(4).setCellValue("재직");         // 상태
+            ex.createCell(5).setCellValue("대리");         // 직위
+            ex.createCell(6).setCellValue("사업본부");     // 사업부문
+            ex.createCell(7).setCellValue("기술");         // 직군
+            ex.createCell(8).setCellValue("PM");           // 직종
+            ex.createCell(9).setCellValue("중급");         // 기술등급
+            ex.createCell(10).setCellValue("한국대학교"); // 학교명
+            ex.createCell(11).setCellValue("컴퓨터공학"); // 전공
+            ex.createCell(12).setCellValue("2020");        // 졸업년도
+            ex.createCell(13).setCellValue("학사");        // 학위
+            ex.createCell(14).setCellValue("1. 정보처리기사"); // 보유자격증
 
-            int firstDataRow = 1;
-            int lastDataRow = 1000;
-            addDropdownNamed(sheet, firstDataRow, lastDataRow, TEMPLATE_HEADERS.indexOf("employment_type"), employmentTypeList);
-            addDropdownNamed(sheet, firstDataRow, lastDataRow, TEMPLATE_HEADERS.indexOf("employment_status"), employmentStatusList);
-            addDropdownNamed(sheet, firstDataRow, lastDataRow, TEMPLATE_HEADERS.indexOf("four_insured"), fourInsuredList);
-            addDropdownNamed(sheet, firstDataRow, lastDataRow, TEMPLATE_HEADERS.indexOf("tax_scheme"), taxSchemeList);
+            // 드롭다운 적용 (2행~1001행)
+            int first = 1, last = 1000;
+            addDropdownNamed(sheet, first, last, TEMPLATE_HEADERS.indexOf("상태"), statusList);
+            addDropdownNamed(sheet, first, last, TEMPLATE_HEADERS.indexOf("직위"), positionList);
+            addDropdownNamed(sheet, first, last, TEMPLATE_HEADERS.indexOf("기술등급"), techGradeList);
+            addDropdownNamed(sheet, first, last, TEMPLATE_HEADERS.indexOf("학위"), degreeList);
 
             if (wb instanceof XSSFWorkbook xssf) {
                 xssf.setSheetHidden(wb.getSheetIndex(listSheet), true);
@@ -245,9 +277,14 @@ public class EmployeeExcelImportService {
             if (headerRow == null) throw new IllegalArgumentException("헤더 행(1행)이 없습니다.");
 
             Map<String, Integer> col = readHeaderMap(headerRow);
+            Map<String, String> requiredLabels = Map.of(
+                    "emp_no", "사번",
+                    "name", "성명",
+                    "hire_date", "입사일"
+            );
             for (String h : REQUIRED_XLSX_HEADERS) {
                 if (!col.containsKey(h)) {
-                    throw new IllegalArgumentException("필수 헤더가 없습니다: " + h);
+                    throw new IllegalArgumentException("필수 컬럼이 없습니다: " + requiredLabels.getOrDefault(h, h));
                 }
             }
 
@@ -265,18 +302,27 @@ public class EmployeeExcelImportService {
                 dto.setRowNum(r + 1);
                 dto.setEmpNo(getCellString(fmt, row, col.get("emp_no")));
                 dto.setName(getCellString(fmt, row, col.get("name")));
-                dto.setEmploymentType(getCellString(fmt, row, col.get("employment_type")));
+                dto.setHireDate(getCellDateString(fmt, row, col.get("hire_date")));
+                dto.setAcademy(getCellString(fmt, row, col.get("academy")));
                 dto.setEmploymentStatus(getCellString(fmt, row, col.get("employment_status")));
+                dto.setPositionName(stripLeadingCode(getCellString(fmt, row, col.get("position_name"))));
+                dto.setDivision(getCellString(fmt, row, col.get("division")));
+                dto.setJobGroup(stripLeadingCode(getCellString(fmt, row, col.get("job_group"))));
+                dto.setJobType(stripLeadingCode(getCellString(fmt, row, col.get("job_type"))));
+                dto.setTechGrade(stripLeadingCode(getCellString(fmt, row, col.get("tech_grade"))));
+                dto.setSchoolName(getCellString(fmt, row, col.get("school_name")));
+                dto.setMajor(getCellString(fmt, row, col.get("major")));
+                dto.setGraduationYear(getCellString(fmt, row, col.get("graduation_year")));
+                dto.setDegree(getCellString(fmt, row, col.get("degree")));
+                dto.setCertificates(getCellString(fmt, row, col.get("certificates")));
+                // 하위호환 필드
+                dto.setEmploymentType(getCellString(fmt, row, col.get("employment_type")));
                 dto.setFourInsured(getCellString(fmt, row, col.get("four_insured")));
                 dto.setTaxScheme(getCellString(fmt, row, col.get("tax_scheme")));
-                dto.setHireDate(getCellDateString(fmt, row, col.get("hire_date")));
                 dto.setGroupHireDate(getCellDateString(fmt, row, col.get("group_hire_date")));
-                dto.setPositionName(getCellString(fmt, row, col.get("position_name")));
                 dto.setIdentificationNumber(getCellString(fmt, row, col.get("identification_number")));
                 dto.setEmail(getCellString(fmt, row, col.get("email")));
                 dto.setBirthDate(getCellDateString(fmt, row, col.get("birth_date")));
-                dto.setAge(getCellString(fmt, row, col.get("age")));
-                dto.setYearsOfService(getCellString(fmt, row, col.get("years_of_service")));
                 dto.setTerminationDate(getCellDateString(fmt, row, col.get("termination_date")));
                 dto.setContractEndDate(getCellDateString(fmt, row, col.get("contract_end_date")));
                 dto.setUsername(getCellString(fmt, row, col.get("username")));
@@ -386,8 +432,11 @@ public class EmployeeExcelImportService {
             dto.setName(dto.getName().trim());
         }
 
+        // 새 템플릿에는 employment_type 컬럼이 없으므로 없으면 정규직 기본값
         String employmentType = normalizeEmploymentType(dto.getEmploymentType());
-        if (employmentType == null) {
+        if (isBlank(dto.getEmploymentType())) {
+            dto.setEmploymentType("REGULAR");
+        } else if (employmentType == null) {
             dto.addError("employment_type 값이 올바르지 않습니다(정규직/계약직/프리랜서).");
         } else {
             dto.setEmploymentType(employmentType);
@@ -610,11 +659,21 @@ public class EmployeeExcelImportService {
         if (compact.contains("grouphiredate")) return "group_hire_date";
         if (compact.contains("identificationnumber")) return "identification_number";
         if (compact.contains("yearsofservice")) return "years_of_service";
-        if (compact.contains("hiredate") || compact.contains("startdate")) return "hire_date";
+        if (compact.contains("hiredate") || compact.contains("startdate") || compact.equals("입사일")) return "hire_date";
         if (compact.contains("terminationdate") || compact.contains("enddate")) return "termination_date";
         if (compact.contains("birthdate") || compact.contains("birthday")) return "birth_date";
         if (compact.equals("age")) return "age";
-        if (compact.contains("positionname") || compact.equals("title")) return "position_name";
+        if (compact.contains("positionname") || compact.equals("title") || compact.equals("직위")) return "position_name";
+        if (compact.contains("techgrade") || compact.equals("기술등급")) return "tech_grade";
+        if (compact.contains("jobgroup") || compact.equals("직군")) return "job_group";
+        if (compact.contains("jobtype") || compact.equals("직종")) return "job_type";
+        if (compact.contains("schoolname") || compact.equals("학교명")) return "school_name";
+        if (compact.equals("전공")) return "major";
+        if (compact.contains("graduationyear") || compact.equals("졸업년도")) return "graduation_year";
+        if (compact.equals("학위")) return "degree";
+        if (compact.contains("certificate") || compact.contains("자격증")) return "certificates";
+        if (compact.contains("academy") || compact.contains("아카데미")) return "academy";
+        if (compact.contains("division") || compact.equals("사업부문") || compact.equals("구분")) return "division";
         return s;
     }
 
@@ -729,6 +788,12 @@ public class EmployeeExcelImportService {
 
     private boolean isBlank(String s) {
         return s == null || s.isBlank();
+    }
+
+    /** "1.부장" → "부장", "1.2.PM" → "PM", "4.특급" → "특급" */
+    private String stripLeadingCode(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        return raw.trim().replaceAll("^([0-9]+\\.)+\\s*", "").trim();
     }
 
     private String normalizeEmploymentType(String raw) {

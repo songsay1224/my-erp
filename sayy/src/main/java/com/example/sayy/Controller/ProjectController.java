@@ -49,7 +49,7 @@ public class ProjectController {
 
     @GetMapping("/admin/projects/new")
     public String newForm(Model model) {
-        model.addAttribute("clients", clientService.getClients(null, null));
+        model.addAttribute("clients", clientService.getClients(null, null, null, 1, Integer.MAX_VALUE));
         model.addAttribute("allEmployees", employeeService.findAllActive());
         model.addAttribute("orgUnits", orgUnitService.getAll());
         return "admin-project-new";
@@ -77,7 +77,7 @@ public class ProjectController {
     @GetMapping("/admin/projects/{id}/edit")
     public String editForm(@PathVariable Long id, Model model) {
         model.addAttribute("project", projectService.getProjectOrThrow(id));
-        model.addAttribute("clients", clientService.getClients(null, null));
+        model.addAttribute("clients", clientService.getClients(null, null, null, 1, Integer.MAX_VALUE));
         model.addAttribute("allEmployees", employeeService.findAllActive());
         model.addAttribute("orgUnits", orgUnitService.getAll());
         return "admin-project-edit";

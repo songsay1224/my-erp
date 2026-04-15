@@ -119,6 +119,10 @@
                             <div class="app-kv-val" th:text="${employee.positionName != null ? employee.positionName : '정보 미입력'}">-</div>
                         </div>
                         <div class="app-kv-row">
+                            <div class="app-kv-key">기술등급</div>
+                            <div class="app-kv-val" th:text="${employee.techGrade != null ? employee.techGrade : '-'}">-</div>
+                        </div>
+                        <div class="app-kv-row">
                             <div class="app-kv-key">조직·직책</div>
                             <div class="app-kv-val">
                                 <div th:if="${#lists.isEmpty(assignments)}" class="text-secondary">-</div>

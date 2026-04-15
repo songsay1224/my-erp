@@ -20,9 +20,17 @@
             <div class="card-body">
                 <div class="fw-bold mb-3">기본 정보</div>
                 <div class="row g-3">
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-4">
                         <label class="form-label">거래처명 <span class="text-danger">*</span></label>
                         <input class="form-control" name="name" required th:value="${client.name}">
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <label class="form-label">구분</label>
+                        <select class="form-select" name="clientType">
+                            <option value="매출" th:selected="${client.clientType == '매출' or client.clientType == null}">매출</option>
+                            <option value="매입" th:selected="${client.clientType == '매입'}">매입</option>
+                            <option value="매출매입" th:selected="${client.clientType == '매출매입'}">매출매입</option>
+                        </select>
                     </div>
                     <div class="col-12 col-md-3">
                         <label class="form-label">상태</label>
@@ -48,21 +56,38 @@
                                oninput="maskCorporateRegNo(this)" onblur="validateCorporateRegNo(this)">
                         <div class="invalid-feedback">형식: 000000-0000000 (13자리)</div>
                     </div>
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-3">
                         <label class="form-label">대표자명</label>
                         <input class="form-control" name="ceoName" th:value="${client.ceoName}">
                     </div>
-                    <div class="col-12 col-md-4">
-                        <label class="form-label">업종/업태</label>
-                        <input class="form-control" name="industry" th:value="${client.industry}">
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">개업연월일</label>
+                        <input class="form-control" type="date" name="openedDate"
+                               th:value="${client.openedDate != null ? #temporals.format(client.openedDate, 'yyyy-MM-dd') : ''}">
                     </div>
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">업태</label>
+                        <input class="form-control" name="businessType" th:value="${client.businessType}">
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">종목</label>
+                        <input class="form-control" name="businessItem" th:value="${client.businessItem}">
+                    </div>
+                    <div class="col-12 col-md-3">
                         <label class="form-label">대표 전화</label>
                         <input class="form-control" name="phone" th:value="${client.phone}">
                     </div>
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">홈페이지</label>
+                        <input class="form-control" name="homepage" th:value="${client.homepage}">
+                    </div>
+                    <div class="col-12 col-md-3">
                         <label class="form-label">이메일</label>
                         <input class="form-control" type="email" name="email" th:value="${client.email}">
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">업종</label>
+                        <input class="form-control" name="industry" th:value="${client.industry}">
                     </div>
                     <div class="col-12 col-md-2">
                         <label class="form-label">우편번호</label>
@@ -72,13 +97,59 @@
                         <label class="form-label">주소</label>
                         <input class="form-control" name="address" th:value="${client.address}">
                     </div>
-                    <div class="col-12">
+                    <div class="col-12 col-md-4">
                         <label class="form-label">상세 주소</label>
                         <input class="form-control" name="addressDetail" th:value="${client.addressDetail}">
                     </div>
+                    <div class="col-12 col-md-2">
+                        <label class="form-label">지역</label>
+                        <select class="form-select" name="region">
+                            <option value="">선택</option>
+                            <option value="서울" th:selected="${client.region == '서울'}">서울</option>
+                            <option value="경기" th:selected="${client.region == '경기'}">경기</option>
+                            <option value="인천" th:selected="${client.region == '인천'}">인천</option>
+                            <option value="부산" th:selected="${client.region == '부산'}">부산</option>
+                            <option value="대구" th:selected="${client.region == '대구'}">대구</option>
+                            <option value="광주" th:selected="${client.region == '광주'}">광주</option>
+                            <option value="대전" th:selected="${client.region == '대전'}">대전</option>
+                            <option value="울산" th:selected="${client.region == '울산'}">울산</option>
+                            <option value="세종" th:selected="${client.region == '세종'}">세종</option>
+                            <option value="강원" th:selected="${client.region == '강원'}">강원</option>
+                            <option value="충북" th:selected="${client.region == '충북'}">충북</option>
+                            <option value="충남" th:selected="${client.region == '충남'}">충남</option>
+                            <option value="전북" th:selected="${client.region == '전북'}">전북</option>
+                            <option value="전남" th:selected="${client.region == '전남'}">전남</option>
+                            <option value="경북" th:selected="${client.region == '경북'}">경북</option>
+                            <option value="경남" th:selected="${client.region == '경남'}">경남</option>
+                            <option value="제주" th:selected="${client.region == '제주'}">제주</option>
+                            <option value="해외" th:selected="${client.region == '해외'}">해외</option>
+                        </select>
+                    </div>
                     <div class="col-12">
                         <label class="form-label">메모</label>
-                        <textarea class="form-control" name="memo" rows="3" th:text="${client.memo}"></textarea>
+                        <textarea class="form-control" name="memo" rows="2" th:text="${client.memo}"></textarea>
+                    </div>
+                </div>
+
+                <hr class="my-3"/>
+                <div class="fw-bold mb-3">계좌정보</div>
+                <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">은행</label>
+                        <select class="form-select" name="bankName">
+                            <option value="">선택안함</option>
+                            <option th:each="b : ${ {'국민은행','신한은행','우리은행','하나은행','기업은행','농협은행','카카오뱅크','토스뱅크','SC제일은행','씨티은행','수협은행','대구은행','부산은행','광주은행','전북은행','경남은행','제주은행','우체국','기타'} }"
+                                    th:value="${b}" th:text="${b}"
+                                    th:selected="${client.bankName == b}"></option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">계좌번호</label>
+                        <input class="form-control" name="bankAccount" th:value="${client.bankAccount}">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">예금자명</label>
+                        <input class="form-control" name="bankHolder" th:value="${client.bankHolder}">
                     </div>
                 </div>
             </div>

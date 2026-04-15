@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -12,18 +13,31 @@ import java.util.List;
 @NoArgsConstructor
 public class ClientEntity {
     private Long id;
+    private String clientType;          // 매출 / 매입 / 매출매입
     private String name;
     private String businessRegNo;
     private String corporateRegNo;
     private String ceoName;
+    private LocalDate openedDate;       // 개업연월일
+    private String businessType;        // 업태
+    private String businessItem;        // 종목
     private String industry;
-    private String phone;
+    private String phone;               // 대표번호
+    private String homepage;            // 홈페이지
     private String email;
     private String zipCode;
     private String address;
     private String addressDetail;
-    private String status;          // ACTIVE / DORMANT / CLOSED
+    private String region;
+    private String status;              // ACTIVE / DORMANT / CLOSED
+    // 계좌정보
+    private String bankName;
+    private String bankAccount;
+    private String bankHolder;
+    private String bankStamp;           // 법인통장 파일 경로
+    // 기타
     private String memo;
+    private String attachmentPath;      // 기타첨부파일
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
